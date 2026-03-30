@@ -127,7 +127,7 @@ a {
 }
 
 body.lock-scroll .app-shell {
-  overflow-y: hidden;
+  overflow: hidden;
 }
 
 .site-header {
@@ -334,6 +334,7 @@ body.lock-scroll .app-shell {
 .bg-abstract {
   position: absolute;
   inset: 0;
+  overflow: hidden;
   pointer-events: none;
   z-index: 0;
 }
