@@ -233,12 +233,12 @@ export function ProjectCard({ project, image, staggerClass, onClick, isTransitio
   }, []);
 
   const [rotate, setRotate] = useState(baseRotation);
-
+  const [touchActive, setTouchActive] = useState(false);
   // ✅ loading control
   const [imageLoaded, setImageLoaded] = useState(false);
   const [showText, setShowText] = useState(false);
   const [showLoader, setShowLoader] = useState(true);
-
+  const touchStartRef = useRef(null);
   // 🔥 track when loading started
   const loadStartRef = useRef(Date.now());
 
@@ -258,8 +258,8 @@ export function ProjectCard({ project, image, staggerClass, onClick, isTransitio
     return () => clearTimeout(t);
   }, [imageLoaded]);
 
-  const handleMouseMove = (e) => {
-    const wrap = e.currentTarget;
+  const handleMove = (clientX, clientY, target) => {
+    const wrap = target;
     const img = wrap.querySelector(".project-image");
 
     if (!img) return;
@@ -286,8 +286,8 @@ export function ProjectCard({ project, image, staggerClass, onClick, isTransitio
       offsetX = (cw - renderedWidth) / 2;
     }
 
-    let x = e.clientX - rect.left;
-    let y = e.clientY - rect.top;
+    let x = clientX - rect.left;
+    let y = clientY - rect.top;
 
     x -= offsetX;
     y -= offsetY;
@@ -308,22 +308,75 @@ export function ProjectCard({ project, image, staggerClass, onClick, isTransitio
 
     const rotateY =
       baseRotation.y +
-      ((e.clientX - rect.left - midX) / midX) * strength;
+      ((clientX - rect.left - midX) / midX) * strength;
 
     const rotateX =
       baseRotation.x +
-      ((midY - (e.clientY - rect.top)) / midY) * strength;
+      ((midY - (clientY - rect.top)) / midY) * strength;
 
     setRotate({ x: rotateX, y: rotateY });
   };
-
   return (
-    <div
-      className={`project-teaser ${staggerClass}`}
-      onClick={() => onClick(project)}
-      onMouseMove={handleMouseMove}
-      onMouseLeave={() => setRotate(baseRotation)}
-    >
+  <div
+    className={`project-teaser ${staggerClass} ${touchActive ? "touch-active" : ""}`}
+    onClick={() => onClick(project)}
+
+    /* DESKTOP */
+    onMouseMove={(e) => handleMove(e.clientX, e.clientY, e.currentTarget)}
+    onMouseLeave={() => {
+      setRotate(baseRotation);
+      setTouchActive(false);
+    }}
+
+    /* MOBILE (FIXED) */
+    onTouchStart={(e) => {
+      const touch = e.touches[0];
+
+      touchStartRef.current = {
+        x: touch.clientX,
+        y: touch.clientY,
+        time: Date.now()
+      };
+
+      setTouchActive(false);
+    }}
+
+    onTouchMove={(e) => {
+      if (!touchStartRef.current) return;
+
+      const touch = e.touches[0];
+
+      const dx = touch.clientX - touchStartRef.current.x;
+      const dy = touch.clientY - touchStartRef.current.y;
+
+      const absX = Math.abs(dx);
+      const absY = Math.abs(dy);
+
+      const time = Date.now() - touchStartRef.current.time;
+
+      // 🔥 1. SCROLL DETECTION (vertical intent)
+      if (absY > absX && absY > 8) {
+        // user is scrolling → never activate tilt
+        touchStartRef.current = null;
+        return;
+      }
+
+      // 🔥 2. REQUIRE HOLD BEFORE ACTIVATION
+      if (!touchActive) {
+        if (time < 120) return; // 👈 tweak (100–150 sweet spot)
+
+        setTouchActive(true);
+      }
+
+      handleMove(touch.clientX, touch.clientY, e.currentTarget);
+    }}
+
+    onTouchEnd={() => {
+      touchStartRef.current = null;
+      setTouchActive(false);
+      setRotate(baseRotation);
+    }}
+  >
       <motion.div
         className="project-tilt"
         animate={{

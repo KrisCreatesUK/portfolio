@@ -30,6 +30,8 @@ function Header({
     setOpen(false);
   };
 
+  const touch = (key) => setActive(key);
+
   return (
     <>
       <motion.header
@@ -48,6 +50,7 @@ function Header({
             />
           </div>
 
+          {/* DESKTOP */}
           <nav className="nav desktop-nav">
             <a
               onClick={() => handle(onWork, "work")}
@@ -80,6 +83,7 @@ function Header({
             <div id="indicator" className={active || ""}></div>
           </nav>
 
+          {/* HAMBURGER */}
           <button
             className={`hamburger ${open ? "active" : ""}`}
             onClick={() => setOpen(!open)}
@@ -90,25 +94,102 @@ function Header({
         </div>
       </motion.header>
 
+      {/* MOBILE MENU */}
       <AnimatePresence>
         {open && (
           <motion.div
             className="mobile-menu"
-            initial={{ opacity: 0, y: -30 }}
+            initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -30 }}
+            exit={{ opacity: 0, y: -10 }}
           >
-            <a onClick={() => handle(onWork, "work")}>Work</a>
-            <a onClick={() => handle(onAbout, "about")}>About</a>
-            <a onClick={() => handle(onThoughts, "thoughts")}>Thoughts</a>
-            <a onClick={() => handle(onContact, "contact")}>Contact</a>
+            <div className="mobile-nav">
+
+              {/* WORK */}
+              <a
+                onClick={() => handle(onWork, "work")}
+                onTouchStart={() => touch("work")}
+                className={active === "work" ? "active" : ""}
+              >
+                {active === "work" && (
+                  <motion.div
+                    layoutId="mobile-indicator"
+                    className="mobile-indicator"
+                  />
+                )}
+
+                <svg viewBox="0 0 24 24">
+                  <path d="M3 7h18M3 12h12M3 17h6" />
+                </svg>
+                <span>Work</span>
+              </a>
+
+              {/* ABOUT */}
+              <a
+                onClick={() => handle(onAbout, "about")}
+                onTouchStart={() => touch("about")}
+                className={active === "about" ? "active" : ""}
+              >
+                {active === "about" && (
+                  <motion.div
+                    layoutId="mobile-indicator"
+                    className="mobile-indicator"
+                  />
+                )}
+
+                <svg viewBox="0 0 24 24">
+                  <circle cx="12" cy="8" r="4" />
+                  <path d="M4 20c2-4 6-6 8-6s6 2 8 6" />
+                </svg>
+                <span>About</span>
+              </a>
+
+              {/* THOUGHTS */}
+              <a
+                onClick={() => handle(onThoughts, "thoughts")}
+                onTouchStart={() => touch("thoughts")}
+                className={active === "thoughts" ? "active" : ""}
+              >
+                {active === "thoughts" && (
+                  <motion.div
+                    layoutId="mobile-indicator"
+                    className="mobile-indicator"
+                  />
+                )}
+
+                <svg viewBox="0 0 24 24">
+                  <path d="M4 4h16v12H7l-3 3z" />
+                </svg>
+                <span>Thoughts</span>
+              </a>
+
+              {/* CONTACT */}
+              <a
+                onClick={() => handle(onContact, "contact")}
+                onTouchStart={() => touch("contact")}
+                className={active === "contact" ? "active" : ""}
+              >
+                {active === "contact" && (
+                  <motion.div
+                    layoutId="mobile-indicator"
+                    className="mobile-indicator"
+                  />
+                )}
+
+                <svg viewBox="0 0 24 24">
+                  <path d="M4 4h16v16H4z" />
+                  <path d="M4 6l8 6 8-6" />
+                </svg>
+                <span>Contact</span>
+              </a>
+
+            </div>
           </motion.div>
         )}
       </AnimatePresence>
     </>
   );
 }
-
 /* =========================
    APP
 ========================= */
@@ -116,6 +197,9 @@ function Header({
 export default function App() {
   const [projects, setProjects] = useState([]);
   const [active, setActive] = useState(null);
+
+  const [panelOpen, setPanelOpen] = useState(false);
+  const [panelExitAction, setPanelExitAction] = useState(null);
 
   const [transitioning, setTransitioning] = useState(false);
 
@@ -171,6 +255,7 @@ export default function App() {
     setPendingContact(false);
     setPendingThoughts(false);
     setPendingScroll(null);
+    setPanelExitAction(null);
     startTransition();
   };
 
@@ -179,6 +264,7 @@ export default function App() {
     setPendingProject(null);
     setPendingContact(false);
     setPendingScroll(null);
+    setPanelExitAction(null);
     startTransition();
   };
 
@@ -187,6 +273,7 @@ export default function App() {
     setPendingProject(null);
     setPendingThoughts(false);
     setPendingScroll(null);
+    setPanelExitAction(null);
     startTransition();
   };
 
@@ -196,6 +283,7 @@ export default function App() {
       setPendingContact(false);
       setPendingProject(null);
       setPendingThoughts(false);
+      setPanelExitAction(null);
       startTransition();
     } else {
       document.getElementById(id)?.scrollIntoView({
@@ -210,7 +298,44 @@ export default function App() {
     setPendingContact(false);
     setPendingThoughts(false);
     setPendingScroll(null);
+    setPanelExitAction(null);
     startTransition();
+  };
+
+  /* =========================
+     PANEL CLOSE ACTIONS
+  ========================= */
+
+  const closePanelToHome = () => {
+    setPanelExitAction("home");
+    setPanelOpen(false);
+  };
+
+  const closePanelToThoughts = () => {
+    setPanelExitAction("thoughts");
+    setPanelOpen(false);
+  };
+
+  const handlePanelExitComplete = () => {
+    if (panelExitAction === "home") {
+      setPendingProject(null);
+      setPendingContact(false);
+      setPendingThoughts(false);
+      setPendingScroll(null);
+
+      startTransition();
+    }
+
+    if (panelExitAction === "thoughts") {
+      setPendingThoughts(true);
+      setPendingProject(null);
+      setPendingContact(false);
+      setPendingScroll(null);
+
+      startTransition();
+    }
+
+    setPanelExitAction(null);
   };
 
   /* =========================
@@ -239,6 +364,12 @@ export default function App() {
             setPendingThoughts(false);
 
             setTransitioning(false);
+
+            if (pendingProject) {
+              setPanelOpen(true);
+            } else {
+              setPanelOpen(false);
+            }
 
             if (pendingScroll) {
               const targetId = pendingScroll;
@@ -279,39 +410,47 @@ export default function App() {
         )}
       </AnimatePresence>
 
-      <LayoutGroup>
-        <AnimatePresence mode="wait">
-          {showContact ? (
-            <ContactPage onClose={goHome} />
-          ) : showThoughts ? (
-            <Thoughts
-              key="thoughts"
-              onSelect={goProject}
-              isTransitioning={transitioning}
-            />
-          ) : !active ? (
-            <Home
-              key="home"
-              projects={projects}
-              isTransitioning={transitioning}
-              onSelect={goProject}
-            />
-          ) : (
-            <div key="project" className="project-mode">
-              <ProjectView project={active} />
+    <LayoutGroup>
+      <AnimatePresence mode="wait">
+        {showContact ? (
+          <ContactPage onClose={goHome} />
+        ) : showThoughts ? (
+          <Thoughts
+            key="thoughts"
+            onSelect={goProject}
+            isTransitioning={transitioning}
+          />
+        ) : !active ? (
+          <Home
+            key="home"
+            projects={projects}
+            isTransitioning={transitioning}
+            onSelect={goProject}
+          />
+        ) : (
+          <div key="project" className="project-mode">
+            <ProjectView project={active} />
 
-              <PreviewPanel
-                project={active}
-                projects={projects}
-                onSelect={goProject}
-                onClose={goHome}
-                onBackToThoughts={goThoughts}
-                siteLogo={siteLogo}
-              />
-            </div>
-          )}
-        </AnimatePresence>
-      </LayoutGroup>
+            <AnimatePresence
+              mode="wait"
+              onExitComplete={handlePanelExitComplete}
+            >
+              {panelOpen && (
+                <PreviewPanel
+                  key={active.id}
+                  project={active}
+                  projects={projects}
+                  onSelect={goProject}
+                  onClose={closePanelToHome}
+                  onBackToThoughts={closePanelToThoughts}
+                  siteLogo={siteLogo}
+                />
+              )}
+            </AnimatePresence>
+          </div>
+        )}
+      </AnimatePresence>
+    </LayoutGroup>
     </div>
   );
 }

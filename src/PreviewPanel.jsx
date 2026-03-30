@@ -97,14 +97,13 @@ export default function PreviewPanel({
   };
 
   return (
-    <AnimatePresence mode="wait">
-      <motion.aside
-        className="preview-panel"
-        initial={{ x: "100%" }}
-        animate={{ x: 0 }}
-        exit={{ x: "100%" }}
-        transition={{ duration: 0.4 }}
-      >
+    <motion.aside
+      className="preview-panel"
+      initial={{ x: "100%" }}
+      animate={{ x: 0 }}
+      exit={{ x: "100%" }}
+      transition={{ duration: 0.4 }}
+    >
         <div className="bg-abstract" />
         <div className="bg-abstract-stripes" />
 
@@ -214,6 +213,5 @@ export default function PreviewPanel({
           </div>
         )}
       </motion.aside>
-    </AnimatePresence>
   );
 }
