@@ -1177,7 +1177,22 @@ overflow-x: hidden;
   .project-mode {
     flex-direction: column;
   }
+/* Images only */
+.project-image,
+.project-image-wrap img {
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+  -webkit-user-drag: none;
+}
 
+/* Remove tap highlight (safe) */
+.project-teaser,
+button,
+a,
+.find-tile {
+  -webkit-tap-highlight-color: transparent;
+}
 
 .panel-logo {
   position: absolute;
