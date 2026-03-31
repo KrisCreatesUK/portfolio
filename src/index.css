@@ -1289,7 +1289,7 @@ a,
 }
 .project-teaser:nth-child(odd) .project-title-overlay {
         left: -80px !important;
-        right: 200px !important;
+        right: 100px !important;
     text-align: left;
 }
   .project-teaser {
@@ -1952,7 +1952,7 @@ transform: translateZ(-200px); /* 🔥 ADD THIS */
 
 .project-teaser:nth-child(even) .project-title-overlay {
     right: -100px;
-    left: 150px;
+    left: 80px;
   text-align: left;
 }
 
