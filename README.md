@@ -1,16 +1,47 @@
-# React + Vite
+# KrisCreates — portfolio
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Personal portfolio for [kriscreates.co.uk](https://kriscreates.co.uk). React 19 + Vite,
+deployed on Vercel.
 
-Currently, two official plugins are available:
+The centrepiece is a live three.js storage array. Each drive bay is one project;
+selecting a bay ejects the drive, pulls that project's screen to the front, and
+mounts the write-up below.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+## Projects on the site
 
-## React Compiler
+| Volume | Project | Runtime |
+| ------ | ------- | ------- |
+| VOL_01 | [CompKit Game Engine](https://compkit.kriscreates.co.uk) | WordPress / WooCommerce / PHP |
+| VOL_02 | Farmazon | Next.js 16 · Prisma · PostgreSQL |
+| VOL_03 | Truck Access Finder | React Native · Expo |
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+## Layout
 
-## Expanding the ESLint configuration
+```
+src/
+  data.js                 every string on the site — projects, counters, links
+  App.jsx                 page shell: header, stage, sections, footer
+  styles.css              tokens + all styling
+  components/
+    Counter.jsx           credential counter with count-up on scroll
+    ProjectPanel.jsx      the mounted-volume write-up + screenshots
+  three/
+    Stage.jsx             canvas, lights, camera rig, floor, particles
+    Rack.jsx              the array and its drive bays
+    Panels.jsx            floating project screens, tethered to their bay
+    layout.js             shared geometry + a seeded PRNG
+    textures.js           canvas-drawn labels and grid (no external assets)
+public/shots/             project screenshots
+```
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+The three.js bundle is lazy-loaded, so the page shell paints before it arrives,
+and a WebGL failure falls back to the HUD alone rather than a blank hero.
+
+## Commands
+
+```bash
+npm install
+npm run dev      # http://localhost:5188
+npm run build
+npm run lint
+```
