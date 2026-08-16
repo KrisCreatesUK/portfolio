@@ -12,7 +12,7 @@ mounts the write-up below.
 | Volume | Project | Runtime |
 | ------ | ------- | ------- |
 | VOL_01 | [CompKit Game Engine](https://compkit.kriscreates.co.uk) | WordPress / WooCommerce / PHP |
-| VOL_02 | Farmazon | Next.js 16 · Prisma · PostgreSQL |
+| VOL_02 | FarmFolk | Next.js 16 · Prisma · PostgreSQL |
 | VOL_03 | Truck Access Finder | React Native · Expo |
 
 ## Layout

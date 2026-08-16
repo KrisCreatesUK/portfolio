@@ -24,7 +24,7 @@ export const counters = [
   { value: profile.yearsBuilding, suffix: "+", label: "Years building", sub: "Freelance & agency" },
   { value: 3, suffix: "", label: "Runtimes shipped", sub: "PHP · Node · Native" },
   { value: 8, suffix: "", label: "Game modules live", sub: "CompKit premium" },
-  { value: 40, suffix: "+", label: "Data models", sub: "Farmazon schema" },
+  { value: 40, suffix: "+", label: "Data models", sub: "FarmFolk schema" },
 ];
 
 export const readout = [
@@ -79,10 +79,10 @@ export const projects = [
     ],
   },
   {
-    id: "farmazon",
+    id: "farmfolk",
     index: "02",
     code: "VOL_02",
-    name: "Farmazon",
+    name: "FarmFolk",
     kind: "Multi-vendor marketplace",
     status: "In build",
     statusTone: "build",
@@ -106,12 +106,12 @@ export const projects = [
     stack: ["Next.js 16", "React 19", "TypeScript", "Prisma", "PostgreSQL", "Auth.js", "Tailwind 4", "Zod", "Stripe"],
     links: [],
     accent: "#57B41A",
-    shot: "/shots/farmazon-home.webp",
+    shot: "/shots/farmfolk-home.webp",
     shotFit: "landscape",
     images: [
-      { src: "/shots/farmazon-home.webp", caption: "Storefront — seasonal hero and category rail" },
-      { src: "/shots/farmazon-shop.webp", caption: "Catalogue with farm, category and season filters" },
-      { src: "/shots/farmazon-farms.webp", caption: "Farm directory — every product traces back to one" },
+      { src: "/shots/farmfolk-home.webp", caption: "Storefront — seasonal hero and category rail" },
+      { src: "/shots/farmfolk-shop.webp", caption: "Catalogue with farm, category and season filters" },
+      { src: "/shots/farmfolk-farms.webp", caption: "Farm directory — every product traces back to one" },
     ],
   },
   {
