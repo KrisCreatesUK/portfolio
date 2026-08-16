@@ -1,0 +1,13 @@
+{
+  "name": "KrisCreates — Full-Stack Developer",
+  "short_name": "KrisCreates",
+  "description": "Full-stack developer building WordPress products, Next.js marketplaces and React Native apps.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#030404",
+  "theme_color": "#030404",
+  "icons": [
+    { "src": "/icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" }
+  ]
+}

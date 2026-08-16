@@ -1,17 +1,22 @@
 <!doctype html>
-<html lang="en">
+<html lang="en-GB">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-  <link rel="icon" type="image/png" href="https://cms.kriscreates.co.uk/wp-content/uploads/2025/10/cropped-kc-favicon.png" />
-  <link rel="canonical" href="https://kriscreates.co.uk/" />
-
-  <title>KrisCreates | Full-Stack Developer — Web, Commerce & Mobile</title>
-
+  <title>KrisCreates | Full-Stack Developer — Web, Commerce &amp; Mobile</title>
   <meta name="description" content="Full-stack developer building complete products: a commercial WooCommerce plugin suite with its own licence server, a multi-vendor Next.js marketplace, and a React Native app for delivery drivers." />
   <meta name="author" content="KrisCreates" />
+  <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1" />
   <meta name="theme-color" content="#030404" />
+
+  <link rel="canonical" href="https://kriscreates.co.uk/" />
+
+  <!-- ICONS -->
+  <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png" />
+  <link rel="icon" type="image/png" sizes="192x192" href="/icon-192.png" />
+  <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+  <link rel="manifest" href="/site.webmanifest" />
 
   <!-- OPEN GRAPH -->
   <meta property="og:site_name" content="KrisCreates" />
@@ -19,49 +24,85 @@
   <meta property="og:description" content="Three production systems, three runtimes — WordPress/PHP, Next.js + Postgres, and React Native. Schema to stylesheet." />
   <meta property="og:url" content="https://kriscreates.co.uk/" />
   <meta property="og:type" content="website" />
-  <meta property="og:image" content="https://cms.kriscreates.co.uk/wp-content/uploads/2026/03/preview.jpg" />
+  <meta property="og:locale" content="en_GB" />
+  <meta property="og:image" content="https://kriscreates.co.uk/og-cover.png" />
+  <meta property="og:image:width" content="1200" />
+  <meta property="og:image:height" content="630" />
+  <meta property="og:image:alt" content="KrisCreates — full-stack developer" />
 
   <!-- TWITTER -->
   <meta name="twitter:card" content="summary_large_image" />
   <meta name="twitter:title" content="KrisCreates | Full-Stack Developer" />
   <meta name="twitter:description" content="Three production systems, three runtimes — WordPress/PHP, Next.js + Postgres, and React Native." />
-  <meta name="twitter:image" content="https://cms.kriscreates.co.uk/wp-content/uploads/2026/03/preview.jpg" />
+  <meta name="twitter:image" content="https://kriscreates.co.uk/og-cover.png" />
 
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+
+  <!-- SEARCH CONSOLE / BING WEBMASTER TOOLS
+       Paste the verification tokens between the quotes when the properties
+       are created, or use the DNS TXT method and leave these out.
+  <meta name="google-site-verification" content="" />
+  <meta name="msvalidate.01" content="" />
+  -->
 
   <!-- STRUCTURED DATA -->
   <script type="application/ld+json">
   {
     "@context": "https://schema.org",
-    "@type": "Person",
-    "name": "Kris Sull",
-    "alternateName": "KrisCreates",
-    "url": "https://kriscreates.co.uk/",
-    "jobTitle": "Full-Stack Developer",
-    "address": { "@type": "PostalAddress", "addressCountry": "GB" },
-    "knowsAbout": [
-      "Full-stack web development",
-      "WordPress plugin development",
-      "WooCommerce",
-      "Next.js",
-      "React",
-      "React Native",
-      "PostgreSQL",
-      "PHP"
-    ],
-    "sameAs": [
-      "https://compkit.kriscreates.co.uk",
-      "https://www.linkedin.com/in/kriscreatesuk/",
-      "https://github.com/KrisCreatesUK"
-    ],
-    "owns": {
-      "@type": "SoftwareApplication",
-      "name": "CompKit Game Engine",
-      "url": "https://compkit.kriscreates.co.uk",
-      "applicationCategory": "BusinessApplication",
-      "operatingSystem": "WordPress"
-    }
+    "@graph": [
+      {
+        "@type": "Person",
+        "@id": "https://kriscreates.co.uk/#kris",
+        "name": "Kris Sull",
+        "alternateName": "KrisCreates",
+        "url": "https://kriscreates.co.uk/",
+        "image": "https://kriscreates.co.uk/og-cover.png",
+        "jobTitle": "Full-Stack Developer",
+        "email": "mailto:hello@kriscreates.co.uk",
+        "address": { "@type": "PostalAddress", "addressCountry": "GB" },
+        "knowsAbout": [
+          "Full-stack web development",
+          "WordPress plugin development",
+          "WooCommerce",
+          "Next.js",
+          "React",
+          "React Native",
+          "PostgreSQL",
+          "PHP",
+          "TypeScript"
+        ],
+        "sameAs": [
+          "https://compkit.kriscreates.co.uk",
+          "https://github.com/KrisCreatesUK",
+          "https://www.linkedin.com/in/kriscreatesuk/",
+          "https://www.upwork.com/freelancers/~015ddc5bd348bef361",
+          "https://www.fiverr.com/sellers/webbodevvo/"
+        ]
+      },
+      {
+        "@type": "WebSite",
+        "@id": "https://kriscreates.co.uk/#website",
+        "url": "https://kriscreates.co.uk/",
+        "name": "KrisCreates",
+        "inLanguage": "en-GB",
+        "publisher": { "@id": "https://kriscreates.co.uk/#kris" }
+      },
+      {
+        "@type": "SoftwareApplication",
+        "name": "CompKit Game Engine",
+        "url": "https://compkit.kriscreates.co.uk",
+        "applicationCategory": "BusinessApplication",
+        "operatingSystem": "WordPress",
+        "author": { "@id": "https://kriscreates.co.uk/#kris" },
+        "offers": {
+          "@type": "Offer",
+          "price": "9.99",
+          "priceCurrency": "GBP",
+          "url": "https://compkit.kriscreates.co.uk"
+        }
+      }
+    ]
   }
   </script>
 </head>

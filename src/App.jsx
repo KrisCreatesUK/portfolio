@@ -211,9 +211,11 @@ function Header() {
 
   return (
     <header className={`site-head ${solid ? "is-solid" : ""}`}>
-      <a className="brand" href="#top">
-        <span className="brand-mark">KC</span>
-        <span className="brand-name">KrisCreates</span>
+      <a className="brand" href="#top" aria-label="KrisCreates — home">
+        <img className="brand-mark" src="/logo-mark.png" alt="" width="44" height="34" />
+        <span className="brand-name">
+          Kris<b>Creates</b>
+        </span>
       </a>
 
       <nav>

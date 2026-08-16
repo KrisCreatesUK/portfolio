@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
+        xmlns:image="http://www.google.com/schemas/sitemap-image/1.1">
+  <url>
+    <loc>https://kriscreates.co.uk/</loc>
+    <lastmod>2026-08-16</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>1.0</priority>
+    <image:image>
+      <image:loc>https://kriscreates.co.uk/og-cover.png</image:loc>
+      <image:title>KrisCreates — Full-stack developer</image:title>
+    </image:image>
+    <image:image>
+      <image:loc>https://kriscreates.co.uk/shots/compkit-scratch.webp</image:loc>
+      <image:title>CompKit Game Engine — scratch card reveal</image:title>
+    </image:image>
+    <image:image>
+      <image:loc>https://kriscreates.co.uk/shots/compkit-admin.webp</image:loc>
+      <image:title>CompKit Game Engine — admin settings with live preview</image:title>
+    </image:image>
+    <image:image>
+      <image:loc>https://kriscreates.co.uk/shots/farmazon-home.webp</image:loc>
+      <image:title>Farmazon — multi-vendor farm marketplace storefront</image:title>
+    </image:image>
+    <image:image>
+      <image:loc>https://kriscreates.co.uk/shots/truck-app.webp</image:loc>
+      <image:title>Truck Access Finder — delivery access app interface</image:title>
+    </image:image>
+  </url>
+</urlset>

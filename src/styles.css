@@ -107,20 +107,19 @@ a { color: inherit; text-decoration: none; }
 .brand { display: flex; align-items: center; gap: 10px; }
 
 .brand-mark {
-  display: grid;
-  place-items: center;
-  width: 30px;
+  width: auto;
   height: 30px;
-  border: 1px solid var(--acc);
-  border-radius: 8px;
-  color: var(--acc);
-  font-family: var(--mono);
-  font-size: 12px;
-  font-weight: 700;
-  box-shadow: 0 0 18px rgba(147, 240, 37, 0.22);
+  filter: drop-shadow(0 0 14px rgba(147, 240, 37, 0.3));
 }
 
-.brand-name { font-family: var(--mono); font-size: 13px; letter-spacing: 0.06em; }
+.brand-name {
+  font-size: 17px;
+  font-weight: 500;
+  letter-spacing: -0.02em;
+  color: var(--text);
+}
+
+.brand-name b { color: var(--acc); font-weight: 700; }
 
 .site-head nav { display: flex; align-items: center; gap: clamp(12px, 2vw, 26px); }
 
