@@ -66,7 +66,7 @@ export const projects = [
     stack: ["PHP", "WordPress", "WooCommerce", "JavaScript", "Canvas", "MySQL", "REST API", "Licence server"],
     links: [
       { label: "compkit.kriscreates.co.uk", href: "https://compkit.kriscreates.co.uk", primary: true },
-      { label: "Play a live demo", href: "https://compkit.kriscreates.co.uk/games/" },
+      { label: "Play a live demo", href: "https://demos.kriscreates.co.uk/compkit/" },
     ],
     accent: "#93F025",
     shot: "/shots/compkit-scratch.webp",
