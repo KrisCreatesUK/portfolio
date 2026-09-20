@@ -24,7 +24,7 @@ export const counters = [
   { value: profile.yearsBuilding, suffix: "+", label: "Years building", sub: "Freelance & agency" },
   { value: 4, suffix: "", label: "Runtimes shipped", sub: "PHP · Python · Native" },
   { value: 8, suffix: "", label: "Game modules live", sub: "CompKit premium" },
-  { value: 12, suffix: "", label: "Products shipped", sub: "All still in service" },
+  { value: 11, suffix: "", label: "Products shipped", sub: "All still in service" },
 ];
 
 export const readout = [
@@ -51,7 +51,7 @@ export const projects = [
     blurb:
       "A WooCommerce plugin suite that turns the instant-win result on an order confirmation page into a game the customer plays — scratch, spin, slots, claw, darts, race, balloon pop or shootout.",
     body: [
-      "The free core is a full plugin in its own right: it hooks WooCommerce order completion, renders the reveal on the confirmation page, and holds back the confirmation email until every ticket has been played — otherwise the inbox spoils the result before the customer even lands on the page. It sits on CompKit Ticket Machine, my own GPLv3 fork of the competition plugin the games used to depend on, so the whole stack is under one roof.",
+      "The free core is a full plugin in its own right: it hooks WooCommerce order completion, renders the reveal on the confirmation page, and holds back the confirmation email until every ticket has been played — otherwise the inbox spoils the result before the customer even lands on the page.",
       "On top sit eight premium game modules, each an HTML5 canvas engine licensed separately at £9.99 a month. Every module has its own admin settings page with a live device-emulating preview, global defaults with per-product overrides and a 'Use Global' fallback, and theme files — one JSON that re-skins a game from Galaxy Grab to Candy Catcher, importable at either level. Artwork is uploadable down to the trackside advertising boards inside the race track.",
       "The commercial side is mine too. A licence server validates subscriptions and serves every game engine remotely — nothing ships in the zip, so a stripped licence check leaves a plugin with no games in it. It builds white-label cores on demand for agencies, drives in-dashboard auto-updates, and stages every release to the demo sites first: customers only see a version once it's been played through and published from the vault.",
     ],
@@ -62,7 +62,6 @@ export const projects = [
       "Live admin preview with device emulation",
       "Global defaults, per-product overrides, theme import/export",
       "White-label builds, staged releases, auto-update channel",
-      "Own GPLv3 fork of the competition plugin underneath",
     ],
     stack: ["PHP 8", "WordPress", "WooCommerce", "JavaScript", "HTML5 Canvas", "MySQL", "REST API", "HMAC-signed delivery", "Licence server"],
     links: [
