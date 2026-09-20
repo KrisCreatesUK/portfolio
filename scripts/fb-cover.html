@@ -1,0 +1,72 @@
+<!doctype html>
+<!-- Facebook Page cover. Render with scripts/social.py at 1640x624 (Facebook's
+     recommended size). Desktop shows the full width; phones crop to the
+     central ~1250px, and the round profile picture sits over the bottom-left
+     on desktop - so nothing important lives in either strip. -->
+<html lang="en-GB">
+<head>
+<meta charset="UTF-8" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<style>
+  :root { --bg:#030404; --acc:#93F025; --text:#e8f0e8; --muted:#8a9a8c; }
+  * { margin:0; box-sizing:border-box; }
+  html, body { width:1640px; height:624px; overflow:hidden; background:var(--bg); }
+  body {
+    position:relative; font-family:"Space Grotesk", system-ui, sans-serif; color:var(--text);
+    background:
+      radial-gradient(600px 460px at 1180px 180px, rgba(147,240,37,.16), transparent 70%),
+      radial-gradient(800px 300px at 300px 700px, rgba(147,240,37,.06), transparent 70%),
+      var(--bg);
+  }
+  .grid {
+    position:absolute; inset:0;
+    background-image: linear-gradient(rgba(147,240,37,.045) 1px, transparent 1px),
+                      linear-gradient(90deg, rgba(147,240,37,.045) 1px, transparent 1px);
+    background-size:60px 60px;
+    mask-image: radial-gradient(1000px 600px at 45% 40%, #000 30%, transparent 100%);
+  }
+  /* everything textual sits inside the mobile-safe centre (x 195..1445) and clear of
+     the profile-picture corner (bottom-left ~ 240x200 on desktop) */
+  .copy { position:absolute; left:250px; top:118px; }
+  .eyebrow { display:flex; align-items:center; gap:10px; font-family:"JetBrains Mono", monospace; font-size:16px; letter-spacing:.16em; color:var(--acc); margin-bottom:22px; }
+  .eyebrow i { width:8px; height:8px; border-radius:50%; background:var(--acc); box-shadow:0 0 12px var(--acc); }
+  h1 { font-size:92px; line-height:.94; letter-spacing:-.04em; font-weight:700; }
+  h1 em { font-style:normal; color:var(--acc); }
+  .lede { margin-top:22px; font-size:22px; color:var(--muted); max-width:560px; line-height:1.35; }
+  .url { position:absolute; left:250px; bottom:58px; font-family:"JetBrains Mono", monospace; font-size:19px; color:var(--acc); letter-spacing:.04em; }
+  .pills { position:absolute; left:250px; bottom:100px; display:flex; gap:10px; }
+  .pill { font-family:"JetBrains Mono", monospace; font-size:14px; color:#c9d6c9; padding:7px 14px; border:1px solid #2a3a3a; border-radius:999px; background:rgba(255,255,255,.03); }
+  .fan { position:absolute; right:150px; top:70px; width:520px; height:480px; }
+  .fan img {
+    position:absolute; aspect-ratio:1600/1008; object-fit:cover; border-radius:10px;
+    border:1px solid rgba(147,240,37,.35); box-shadow:0 30px 60px rgba(0,0,0,.6);
+  }
+  .fan img:nth-child(1) { right:0; top:0; transform:rotate(6deg); width:330px; z-index:3; }
+  .fan img:nth-child(2) { right:180px; top:170px; transform:rotate(-5deg); z-index:4; width:300px; }
+  .fan img:nth-child(3) { right:300px; top:20px; transform:rotate(-12deg); z-index:2; width:230px; opacity:.85; }
+  .fan img:nth-child(4) { right:-20px; top:280px; transform:rotate(9deg); z-index:2; width:260px; opacity:.9; }
+</style>
+</head>
+<body>
+  <div class="grid"></div>
+  <div class="copy">
+    <div class="eyebrow"><i></i>KRISCREATES — UNITED KINGDOM</div>
+    <h1>Full-stack<br /><em>developer</em></h1>
+    <p class="lede">Self-taught. Four products in service — WordPress, native Android, Python. I build and ship the whole thing.</p>
+  </div>
+  <div class="fan">
+    <img src="../public/shots/hero-compkit.webp" alt="" />
+    <img src="../public/shots/hero-pokellectr.webp" alt="" />
+    <img src="../public/shots/hero-truckit.webp" alt="" />
+    <img src="../public/shots/hero-clippd.webp" alt="" />
+  </div>
+  <div class="pills">
+    <span class="pill">CompKit Game Engine</span>
+    <span class="pill">Truck It Lets Park</span>
+    <span class="pill">Pokéllectr</span>
+    <span class="pill">ClippD</span>
+  </div>
+  <div class="url">kriscreates.co.uk</div>
+</body>
+</html>
