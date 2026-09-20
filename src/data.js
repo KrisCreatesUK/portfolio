@@ -70,7 +70,7 @@ export const projects = [
       { label: "Play a live demo", href: "https://demos.kriscreates.co.uk/compkit/" },
     ],
     accent: "#93F025",
-    shot: "/shots/compkit-scratchcard-play-black-gold.webp",
+    shot: "/shots/hero-compkit.webp",
     shotFit: "landscape",
     images: [
       { src: "/shots/compkit-scratchcard-play-black-gold.webp", caption: "Scratch Card — Black Gold theme, symbols game, sums game and prize vault" },
@@ -115,8 +115,8 @@ export const projects = [
       { label: "hgvparking.kriscreates.co.uk", href: "https://hgvparking.kriscreates.co.uk", primary: true },
     ],
     accent: "#A78BFA",
-    shot: "/shots/truckit-route-map.webp",
-    shotFit: "portrait",
+    shot: "/shots/hero-truckit.webp",
+    shotFit: "landscape",
     images: [
       { src: "/shots/truckit-route-map.webp", caption: "Birmingham to Carlisle — 192 free stops within five miles of the route, in the order you reach them" },
       { src: "/shots/truckit-filters.webp", caption: "Filters: artic OK, overnight OK, quiet, toilets, plus fuel brands and services on the map" },
@@ -153,8 +153,8 @@ export const projects = [
     stack: ["React Native", "Expo", "TypeScript", "ML Kit OCR", "expo-camera", "RevenueCat", "TCGplayer data", "Node build tooling"],
     links: [],
     accent: "#FFD84D",
-    shot: "/shots/pokellectr-scan.webp",
-    shotFit: "portrait",
+    shot: "/shots/hero-pokellectr.webp",
+    shotFit: "landscape",
     images: [
       { src: "/shots/pokellectr-scan.webp", caption: "Point, scan, it's in your binder — name, set, number and price in about a second" },
       { src: "/shots/pokellectr-packs.webp", caption: "Pack sessions — every pull counted against what the box cost" },
@@ -191,7 +191,7 @@ export const projects = [
     stack: ["Python", "FastAPI", "ffmpeg", "yt-dlp", "SQLite", "Claude API", "YouTube Data API", "Playwright", "Vanilla JS"],
     links: [],
     accent: "#FF5C8A",
-    shot: "/shots/clippd-clips.webp",
+    shot: "/shots/hero-clippd.webp",
     shotFit: "landscape",
     images: [
       { src: "/shots/clippd-clips.webp", caption: "The clip library — every cut scored on hook, emotion and payoff, captioned, queued or live" },
