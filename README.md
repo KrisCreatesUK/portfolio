@@ -12,8 +12,9 @@ mounts the write-up below.
 | Volume | Project | Runtime |
 | ------ | ------- | ------- |
 | VOL_01 | [CompKit Game Engine](https://compkit.kriscreates.co.uk) | WordPress / WooCommerce / PHP |
-| VOL_02 | FarmFolk | Next.js 16 · Prisma · PostgreSQL |
-| VOL_03 | Truck Access Finder | React Native · Expo |
+| VOL_02 | Truck It Lets Park | React Native · Expo · MapLibre, dataset built in Python from OSM |
+| VOL_03 | Pokellectr | React Native · Expo · ML Kit OCR |
+| VOL_04 | ClippD | Python · FastAPI · ffmpeg |
 
 ## Layout
 

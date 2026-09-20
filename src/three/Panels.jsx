@@ -12,6 +12,7 @@ const PARKED = [
   [-3.4, 4.4, -1.2],
   [4.3, 1.3, -1.6],
   [-2.9, 0.9, 2.4],
+  [3.5, 5.1, -2.8],
 ];
 
 const FOCUS = [1.85, 3.9, 1.5];
@@ -49,6 +50,13 @@ function Panel({ project, index, total, active, dimmed, onSelect, onHover }) {
 
   const target = new THREE.Vector3();
   const parked = PARKED[index % PARKED.length];
+
+  /* The screens are holograms, not objects in the room: they draw over the rack
+     regardless of where they park, so a panel parked behind the array is never
+     hidden by it. Depth testing is off and everything is ordered by hand — the
+     selected panel last so it wins where two overlap. */
+  const ro = active ? 120 : 100;
+  const overlay = { depthTest: false, depthWrite: false };
 
   useFrame((state, dt) => {
     const g = group.current;
@@ -98,38 +106,39 @@ function Panel({ project, index, total, active, dimmed, onSelect, onHover }) {
       >
         <group ref={inner}>
           {/* glass backing */}
-          <mesh position={[0, 0, -0.012]}>
+          <mesh position={[0, 0, -0.012]} renderOrder={ro}>
             <planeGeometry args={[w + 0.16, h + 0.5]} />
-            <meshBasicMaterial color="#050a09" transparent opacity={active ? 0.86 : 0.66} />
+            <meshBasicMaterial color="#050a09" transparent opacity={active ? 0.86 : 0.66} {...overlay} />
           </mesh>
 
           {/* frame */}
-          <lineSegments position={[0, 0, -0.01]}>
+          <lineSegments position={[0, 0, -0.01]} renderOrder={ro + 1}>
             <edgesGeometry args={[new THREE.PlaneGeometry(w + 0.16, h + 0.5)]} />
-            <lineBasicMaterial color={project.accent} transparent opacity={active ? 0.95 : 0.4} />
+            <lineBasicMaterial color={project.accent} transparent opacity={active ? 0.95 : 0.4} {...overlay} />
           </lineSegments>
 
           {/* the screenshot */}
-          <mesh>
+          <mesh renderOrder={ro + 2}>
             <planeGeometry args={[w, h]} />
             <meshBasicMaterial
               map={mapped}
               toneMapped={false}
               transparent
               opacity={active ? 1 : dimmed ? 0.55 : 0.8}
+              {...overlay}
             />
           </mesh>
 
           {/* scan line sweeping the image */}
-          <mesh ref={scan} position={[0, 0, 0.004]}>
+          <mesh ref={scan} position={[0, 0, 0.004]} renderOrder={ro + 3}>
             <planeGeometry args={[w, 0.035]} />
-            <meshBasicMaterial color={project.accent} transparent opacity={active ? 0.5 : 0.25} />
+            <meshBasicMaterial color={project.accent} transparent opacity={active ? 0.5 : 0.25} {...overlay} />
           </mesh>
 
           {/* caption plate */}
-          <mesh position={[0, -h / 2 - 0.17, 0.002]}>
+          <mesh position={[0, -h / 2 - 0.17, 0.002]} renderOrder={ro + 4}>
             <planeGeometry args={[w, 0.26]} />
-            <meshBasicMaterial map={capTex} transparent toneMapped={false} />
+            <meshBasicMaterial map={capTex} transparent toneMapped={false} {...overlay} />
           </mesh>
 
           {/* corner ticks */}
@@ -139,9 +148,9 @@ function Panel({ project, index, total, active, dimmed, onSelect, onHover }) {
             [-1, -1],
             [1, -1],
           ].map(([sx, sy], i) => (
-            <mesh key={i} position={[(sx * (w + 0.16)) / 2, (sy * (h + 0.5)) / 2, 0.003]}>
+            <mesh key={i} position={[(sx * (w + 0.16)) / 2, (sy * (h + 0.5)) / 2, 0.003]} renderOrder={ro + 5}>
               <planeGeometry args={[0.12, 0.02]} />
-              <meshBasicMaterial color={project.accent} transparent opacity={active ? 1 : 0.5} />
+              <meshBasicMaterial color={project.accent} transparent opacity={active ? 1 : 0.5} {...overlay} />
             </mesh>
           ))}
         </group>
@@ -171,6 +180,8 @@ function Tether({ from, to, accent, active }) {
       opacity={active ? 0.5 : 0.18}
       lineWidth={1}
       dashed={false}
+      depthTest={false}
+      renderOrder={90}
     />
   );
 }

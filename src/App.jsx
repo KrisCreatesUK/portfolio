@@ -121,7 +121,28 @@ export default function App() {
 
         {/* ================= ACTIVE VOLUME ================= */}
         <section className="section" id="volume">
-          <SectionHead index="01" title="Mounted volume" note="Three systems, three runtimes" />
+          <SectionHead index="01" title="Mounted volume" note="Four systems, four runtimes" />
+
+          {/* Sticks under the site header while the write-up scrolls, so a
+              different volume is one tap away from halfway down a long one */}
+          <nav className="vol-bar" aria-label="Switch volume">
+            {projects.map((p) => (
+              <button
+                key={p.id}
+                className={`vol-tab ${p.id === activeId ? "is-active" : ""}`}
+                style={{ "--accent": p.accent }}
+                aria-current={p.id === activeId ? "true" : undefined}
+                onClick={() => {
+                  select(p.id);
+                  document.getElementById("volume")?.scrollIntoView({ behavior: "smooth", block: "start" });
+                }}
+              >
+                <span className="vol-tab-code">{p.code}</span>
+                <span className="vol-tab-name">{p.name}</span>
+              </button>
+            ))}
+          </nav>
+
           <ProjectPanel project={active} />
         </section>
 
