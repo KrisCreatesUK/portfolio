@@ -1,0 +1,70 @@
+<!doctype html>
+<!-- Source for public/og-cover.png. Render with scripts/og-cover.py (Playwright,
+     1200x630). Kept as HTML so it uses the site's real fonts and tokens. -->
+<html lang="en-GB">
+<head>
+<meta charset="UTF-8" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<style>
+  :root { --bg:#030404; --acc:#93F025; --text:#e8f0e8; --muted:#8a9a8c; --line:#1c2828; }
+  * { margin:0; box-sizing:border-box; }
+  html, body { width:1200px; height:630px; overflow:hidden; background:var(--bg); }
+  body {
+    position:relative; font-family:"Space Grotesk", system-ui, sans-serif; color:var(--text);
+    background:
+      radial-gradient(520px 420px at 900px 200px, rgba(147,240,37,.18), transparent 70%),
+      radial-gradient(700px 300px at 300px 700px, rgba(147,240,37,.07), transparent 70%),
+      var(--bg);
+  }
+  .grid {
+    position:absolute; inset:0;
+    background-image: linear-gradient(rgba(147,240,37,.045) 1px, transparent 1px),
+                      linear-gradient(90deg, rgba(147,240,37,.045) 1px, transparent 1px);
+    background-size:60px 60px;
+    mask-image: radial-gradient(900px 600px at 40% 40%, #000 30%, transparent 100%);
+  }
+  .brand { position:absolute; left:72px; top:64px; display:flex; align-items:center; gap:16px; }
+  .brand img { height:52px; width:auto; filter: drop-shadow(0 0 18px rgba(147,240,37,.35)); }
+  .brand span { font-size:40px; font-weight:500; letter-spacing:-.02em; }
+  .brand b { color:var(--acc); font-weight:700; }
+  h1 { position:absolute; left:72px; top:222px; font-size:104px; line-height:.94; letter-spacing:-.04em; font-weight:700; }
+  h1 em { font-style:normal; color:var(--acc); }
+  .pills { position:absolute; left:72px; bottom:66px; display:flex; gap:12px; }
+  .pill {
+    font-family:"JetBrains Mono", monospace; font-size:17px; color:#c9d6c9;
+    padding:10px 20px; border:1px solid #2a3a3a; border-radius:999px;
+    background:rgba(255,255,255,.03);
+  }
+  .url { position:absolute; right:72px; bottom:74px; font-family:"JetBrains Mono", monospace; font-size:19px; color:var(--acc); letter-spacing:.04em; }
+  /* the four screens, fanned like the rack's floating panels */
+  .fan { position:absolute; right:60px; top:96px; width:420px; height:300px; }
+  .fan img {
+    position:absolute; width:300px; aspect-ratio:1600/1008; object-fit:cover; border-radius:10px;
+    border:1px solid rgba(147,240,37,.35); box-shadow:0 30px 60px rgba(0,0,0,.6);
+  }
+  .fan img:nth-child(1) { right:0; top:0; transform:rotate(6deg); width:310px; z-index:3; }
+  .fan img:nth-child(2) { right:150px; top:160px; transform:rotate(-5deg); z-index:4; width:290px; }
+  .fan img:nth-child(3) { right:250px; top:30px; transform:rotate(-12deg); z-index:2; width:220px; opacity:.85; }
+  .fan img:nth-child(4) { right:-10px; top:250px; transform:rotate(9deg); z-index:2; width:250px; opacity:.9; }
+</style>
+</head>
+<body>
+  <div class="grid"></div>
+  <div class="brand"><img src="../public/logo-mark.png" alt="" /><span>Kris<b>Creates</b></span></div>
+  <h1>Full-stack<br /><em>developer</em></h1>
+  <div class="fan">
+    <img src="../public/shots/hero-compkit.webp" alt="" />
+    <img src="../public/shots/hero-pokellectr.webp" alt="" />
+    <img src="../public/shots/hero-truckit.webp" alt="" />
+    <img src="../public/shots/hero-clippd.webp" alt="" />
+  </div>
+  <div class="pills">
+    <span class="pill">CompKit Game Engine</span>
+    <span class="pill">Truck It Lets Park</span>
+    <span class="pill">Pokéllectr</span>
+    <span class="pill">ClippD</span>
+  </div>
+  <div class="url">kriscreates.co.uk</div>
+</body>
+</html>
