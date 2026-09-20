@@ -21,7 +21,7 @@ export const profile = {
    the projects below. Nothing invented.
 --------------------------------------------------------- */
 export const counters = [
-  { value: profile.yearsBuilding, suffix: "+", label: "Years building", sub: "Freelance & agency" },
+  { value: profile.yearsBuilding, suffix: "+", label: "Years coding", sub: "Self-taught" },
   { value: 4, suffix: "", label: "Runtimes shipped", sub: "PHP · Python · Native" },
   { value: 8, suffix: "", label: "Game modules live", sub: "CompKit premium" },
   { value: 11, suffix: "", label: "Products shipped", sub: "All still in service" },
