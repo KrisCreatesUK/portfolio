@@ -156,8 +156,8 @@ d = ImageDraw.Draw(c)
 fw = font(BOLD, 78)
 d.text((232, 158), "Clipp", font=fw, fill=(240, 244, 255))
 d.text((232 + d.textlength("Clipp", font=fw), 158), "D", font=fw, fill=(96, 165, 250))
-text_block(c, 90, 320, "Long podcasts in. Published shorts out.",
-           "Scores every moment, cuts it vertical with word-timed captions, and schedules it across every account you own.",
+text_block(c, 90, 320, "Long podcasts in. Paid clips out.",
+           "Scores, cuts and captions every moment, posts across your accounts, and works your Whop campaigns on autopilot. Licensed software that runs on your own machine.",
            (232, 236, 248), (140, 150, 180), tsize=56, maxw=540)
 screen(c, OUT + r"\clippd-clips.webp", 680, 90, 1100)
 c = c.crop((0, 0, W, H))
