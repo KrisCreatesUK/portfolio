@@ -24,7 +24,7 @@ export const counters = [
   { value: profile.yearsBuilding, suffix: "+", label: "Years building", sub: "Freelance & agency" },
   { value: 4, suffix: "", label: "Runtimes shipped", sub: "PHP · Python · Native" },
   { value: 8, suffix: "", label: "Game modules live", sub: "CompKit premium" },
-  { value: 4581, suffix: "", label: "Free HGV stops mapped", sub: "Truck It Lets Park" },
+  { value: 12, suffix: "", label: "Products shipped", sub: "All still in service" },
 ];
 
 export const readout = [
