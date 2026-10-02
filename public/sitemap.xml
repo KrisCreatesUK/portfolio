@@ -3,7 +3,7 @@
         xmlns:image="http://www.google.com/schemas/sitemap-image/1.1">
   <url>
     <loc>https://kriscreates.co.uk/</loc>
-    <lastmod>2026-09-18</lastmod>
+    <lastmod>2026-10-02</lastmod>
     <changefreq>monthly</changefreq>
     <priority>1.0</priority>
     <image:image>
@@ -24,7 +24,7 @@
     </image:image>
     <image:image>
       <image:loc>https://kriscreates.co.uk/shots/pokellectr-scan.webp</image:loc>
-      <image:title>Pokellectr — Pokémon card scanner</image:title>
+      <image:title>Pokéllectr — Pokémon card scanner and eBay lister</image:title>
     </image:image>
     <image:image>
       <image:loc>https://kriscreates.co.uk/shots/clippd-campaigns.webp</image:loc>

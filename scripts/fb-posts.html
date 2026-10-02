@@ -1,0 +1,286 @@
+<!doctype html>
+<!-- Facebook feed post cards, 1080x1080. Rendered one per .post by
+     scripts/fb-posts.py, which screenshots each element by id and writes a JPG
+     into ../Facebook/posts/. Square because that is what fills a phone feed;
+     the site's own black, grid and fonts so the page looks like the portfolio. -->
+<html lang="en-GB">
+<head>
+<meta charset="UTF-8" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<style>
+  :root { --bg:#030404; --acc:#93F025; --text:#e8f0e8; --muted:#8a9a8c; }
+  * { margin:0; box-sizing:border-box; }
+  body { background:#111; font-family:"Space Grotesk", system-ui, sans-serif; }
+
+  .post {
+    position:relative; width:1080px; height:1080px; overflow:hidden;
+    background:
+      radial-gradient(700px 520px at 78% 82%, color-mix(in srgb, var(--accent) 22%, transparent), transparent 70%),
+      radial-gradient(600px 400px at 10% 10%, color-mix(in srgb, var(--accent) 9%, transparent), transparent 70%),
+      var(--bg);
+    color:var(--text); margin:0 0 24px;
+  }
+  .post .grid {
+    position:absolute; inset:0;
+    background-image: linear-gradient(rgba(255,255,255,.035) 1px, transparent 1px),
+                      linear-gradient(90deg, rgba(255,255,255,.035) 1px, transparent 1px);
+    background-size:60px 60px;
+    mask-image: radial-gradient(720px 620px at 40% 35%, #000 30%, transparent 100%);
+  }
+
+  /* top bar: who this is from */
+  .top { position:absolute; left:72px; top:64px; right:72px; display:flex; align-items:center; justify-content:space-between; }
+  .brand { display:flex; align-items:center; gap:12px; }
+  .brand img { height:34px; width:auto; filter:drop-shadow(0 0 12px rgba(147,240,37,.35)); }
+  .brand span { font-size:26px; font-weight:500; letter-spacing:-.02em; }
+  .brand b { color:var(--acc); font-weight:700; }
+  .tag {
+    font-family:"JetBrains Mono", monospace; font-size:15px; letter-spacing:.14em;
+    color:var(--accent); border:1px solid color-mix(in srgb, var(--accent) 45%, transparent);
+    border-radius:999px; padding:8px 18px; background:color-mix(in srgb, var(--accent) 10%, transparent);
+  }
+
+  /* headline block */
+  .copy { position:absolute; left:72px; top:150px; right:72px; }
+  .kicker { font-family:"JetBrains Mono", monospace; font-size:17px; letter-spacing:.16em; color:var(--accent); margin-bottom:18px; }
+  h2 { font-size:62px; line-height:1.02; letter-spacing:-.035em; font-weight:700; max-width:930px; }
+  h2.sm { font-size:52px; }
+  .sub { margin-top:18px; font-size:24px; line-height:1.34; color:var(--muted); max-width:860px; }
+
+  /* media */
+  .media { position:absolute; left:0; right:0; bottom:104px; height:470px; }
+  .media.tall { height:520px; bottom:98px; }
+  .media img { position:absolute; border-radius:14px; box-shadow:0 34px 70px rgba(0,0,0,.65); border:1px solid color-mix(in srgb, var(--accent) 38%, transparent); }
+
+  /* one wide screenshot, centred and bled off the right */
+  .wide img { left:72px; width:1090px; top:0; }
+  .wide.inset img { left:72px; width:936px; }
+
+  /* two phones */
+  .phones img { top:0; height:100%; width:auto; border-radius:26px; }
+  .phones img:nth-child(1) { left:300px; z-index:2; }
+  .phones img:nth-child(2) { left:620px; transform:rotate(5deg); opacity:.92; }
+
+  /* four game shots */
+  .quad img { width:470px; border-radius:12px; }
+  .quad img:nth-child(1) { left:72px;  top:0; }
+  .quad img:nth-child(2) { left:562px; top:0; }
+  .quad img:nth-child(3) { left:72px;  top:300px; }
+  .quad img:nth-child(4) { left:562px; top:300px; }
+
+  .foot {
+    position:absolute; left:72px; right:72px; bottom:44px;
+    display:flex; align-items:center; justify-content:space-between;
+    font-family:"JetBrains Mono", monospace; font-size:19px; color:var(--acc); letter-spacing:.04em;
+  }
+  .foot .right { color:var(--muted); font-size:17px; letter-spacing:.1em; }
+</style>
+</head>
+<body>
+
+<!-- 01 — intro ------------------------------------------------------------ -->
+<div class="post" id="p01" style="--accent:#93F025">
+  <div class="grid"></div>
+  <div class="top">
+    <div class="brand"><img src="../public/logo-mark.png" alt="" /><span>Kris<b>Creates</b></span></div>
+    <div class="tag">UNITED KINGDOM</div>
+  </div>
+  <div class="copy">
+    <div class="kicker">SELF-TAUGHT · FOUR PRODUCTS IN SERVICE</div>
+    <h2>I build and ship<br />the whole thing.</h2>
+    <p class="sub">The data pipeline, the API, the interface, the licensing, the deploy. No CS degree, no dev job on my CV — four products instead.</p>
+  </div>
+  <div class="media quad" style="bottom:110px; height:500px">
+    <img src="../public/shots/hero-compkit.webp" alt="" style="width:452px" />
+    <img src="../public/shots/hero-truckit.webp" alt="" style="width:452px; left:556px" />
+    <img src="../public/shots/hero-pokellectr.webp" alt="" style="width:452px; top:266px" />
+    <img src="../public/shots/hero-clippd.webp" alt="" style="width:452px; left:556px; top:266px" />
+  </div>
+  <div class="foot"><span>kriscreates.co.uk</span><span class="right">OPEN TO REMOTE WORK</span></div>
+</div>
+
+<!-- 02 — CompKit: the email ------------------------------------------------ -->
+<div class="post" id="p02" style="--accent:#93F025">
+  <div class="grid"></div>
+  <div class="top">
+    <div class="brand"><img src="../public/logo-mark.png" alt="" /><span>Kris<b>Creates</b></span></div>
+    <div class="tag">COMPKIT GAME ENGINE</div>
+  </div>
+  <div class="copy">
+    <div class="kicker">THE PROBLEM NOBODY EXPECTS</div>
+    <h2>The email spoils<br />the prize.</h2>
+    <p class="sub">WooCommerce sends the confirmation the moment an order completes — telling the customer if they've won before they've scratched anything. So the core holds it back until every ticket is played.</p>
+  </div>
+  <div class="media wide inset"><img src="../public/shots/compkit-scratchcard-play-black-gold.webp" alt="" /></div>
+  <div class="foot"><span>compkit.kriscreates.co.uk</span><span class="right">8 GAMES · WOOCOMMERCE</span></div>
+</div>
+
+<!-- 03 — CompKit: one theme file ------------------------------------------- -->
+<div class="post" id="p03" style="--accent:#93F025">
+  <div class="grid"></div>
+  <div class="top">
+    <div class="brand"><img src="../public/logo-mark.png" alt="" /><span>Kris<b>Creates</b></span></div>
+    <div class="tag">COMPKIT GAME ENGINE</div>
+  </div>
+  <div class="copy">
+    <div class="kicker">SAME CODE · DIFFERENT WORLD</div>
+    <h2 class="sm">Four of these are one<br />plugin and a JSON file.</h2>
+    <p class="sub">Import a theme at global or per-product level and the game re-skins itself — down to the advertising boards inside the race track.</p>
+  </div>
+  <div class="media quad" style="bottom:104px; height:512px">
+    <img src="../public/shots/compkit-grabclaw-play-candy-catcher.webp" alt="" />
+    <img src="../public/shots/compkit-slots-play-pharaohs-fortune.webp" alt="" />
+    <img src="../public/shots/compkit-darts-play-treasure-target.webp" alt="" />
+    <img src="../public/shots/compkit-football-play-ocean-cup.webp" alt="" />
+  </div>
+  <div class="foot"><span>compkit.kriscreates.co.uk</span><span class="right">PLAY THE LIVE DEMO</span></div>
+</div>
+
+<!-- 04 — Truck It: why ----------------------------------------------------- -->
+<div class="post" id="p04" style="--accent:#A78BFA">
+  <div class="grid"></div>
+  <div class="top">
+    <div class="brand"><img src="../public/logo-mark.png" alt="" /><span>Kris<b>Creates</b></span></div>
+    <div class="tag">TRUCK IT LETS PARK</div>
+  </div>
+  <div class="copy">
+    <div class="kicker">THE DATASET DIDN'T EXIST</div>
+    <h2>4,581 free stops.<br />So I built the map.</h2>
+    <p class="sub">There is no national dataset of UK lay-bys or lorry parking. I checked. So I made one from OpenStreetMap in Python and put it in a driver's pocket.</p>
+  </div>
+  <div class="media tall phones">
+    <img src="../public/shots/truckit-route-map.webp" alt="" />
+    <img src="../public/shots/truckit-filters.webp" alt="" />
+  </div>
+  <div class="foot"><span>hgvparking.kriscreates.co.uk</span><span class="right">GOOGLE PLAY SOON</span></div>
+</div>
+
+<!-- 05 — Truck It: honesty -------------------------------------------------- -->
+<div class="post" id="p05" style="--accent:#A78BFA">
+  <div class="grid"></div>
+  <div class="top">
+    <div class="brand"><img src="../public/logo-mark.png" alt="" /><span>Kris<b>Creates</b></span></div>
+    <div class="tag">TRUCK IT LETS PARK</div>
+  </div>
+  <div class="copy">
+    <div class="kicker">HONESTY AS A FEATURE</div>
+    <h2 class="sm">"Nobody has said"<br />is a real answer.</h2>
+    <p class="sub">Nothing in OpenStreetMap says a lay-by allows overnight parking — so the app doesn't say it either. Every stop carries a confidence label, and drivers who've been there fill the gaps in.</p>
+  </div>
+  <div class="media tall phones">
+    <img src="../public/shots/truckit-route-stops.webp" alt="" />
+    <img src="../public/shots/truckit-splash.webp" alt="" />
+  </div>
+  <div class="foot"><span>hgvparking.kriscreates.co.uk</span><span class="right">NO ADS · NO ACCOUNTS · NO TRACKING</span></div>
+</div>
+
+<!-- 06 — Pokellectr: OCR ---------------------------------------------------- -->
+<div class="post" id="p06" style="--accent:#FFD84D">
+  <div class="grid"></div>
+  <div class="top">
+    <div class="brand"><img src="../public/logo-mark.png" alt="" /><span>Kris<b>Creates</b></span></div>
+    <div class="tag">POKÉLLECTR</div>
+  </div>
+  <div class="copy">
+    <div class="kicker">WHAT THE CAMERA ACTUALLY READS</div>
+    <h2 class="sm">"GOBno35/ 197"<br />is a collector number.</h2>
+    <p class="sub">The fix wasn't better OCR. Pick the name by where it sits on the card, match word by word, check the number against the set size, and need two reads to agree. 1 in 8 → 14 of 16.</p>
+  </div>
+  <div class="media tall phones">
+    <img src="../public/shots/pokellectr-scan.webp" alt="" />
+    <img src="../public/shots/pokellectr-card.webp" alt="" />
+  </div>
+  <div class="foot"><span>kriscreates.co.uk</span><span class="right">20,479 CARDS · FULLY OFFLINE</span></div>
+</div>
+
+<div class="post" id="p07" style="--accent:#FFD84D">
+  <div class="grid"></div>
+  <div class="top">
+    <div class="brand"><img src="../public/logo-mark.png" alt="" /><span>Kris<b>Creates</b></span></div>
+    <div class="tag">POKÉLLECTR</div>
+  </div>
+  <div class="copy">
+    <div class="kicker">ONLY WHAT A PHONE CAN MEASURE</div>
+    <h2 class="sm">It grades the centring.<br />It won't guess the rest.</h2>
+    <p class="sub">Centring is geometry, so it's measured and reported as a ceiling. Corners and edges are measured as whitening. Surface needs raking light and a loupe — so the app says so instead of inventing a number.</p>
+  </div>
+  <div class="media tall phones">
+    <img src="../public/shots/pokellectr-grade.webp" alt="" />
+    <img src="../public/shots/pokellectr-packs.webp" alt="" />
+  </div>
+  <div class="foot"><span>kriscreates.co.uk</span><span class="right">OUT NOW ON GOOGLE PLAY</span></div>
+</div>
+
+<!-- 08 — ClippD: the pipeline ----------------------------------------------- -->
+<div class="post" id="p08" style="--accent:#FF5C8A">
+  <div class="grid"></div>
+  <div class="top">
+    <div class="brand"><img src="../public/logo-mark.png" alt="" /><span>Kris<b>Creates</b></span></div>
+    <div class="tag">CLIPPD</div>
+  </div>
+  <div class="copy">
+    <div class="kicker">LONG PODCASTS IN · PUBLISHED SHORTS OUT</div>
+    <h2 class="sm">It scores every moment,<br />then cuts the best ones.</h2>
+    <p class="sub">Hook, payoff, and whether a stranger could follow it cold. Vertical, word-by-word captions, scheduled across every account you own — running on your own machine.</p>
+  </div>
+  <div class="media wide inset"><img src="../public/shots/clippd-clips.webp" alt="" /></div>
+  <div class="foot"><span>kriscreates.co.uk</span><span class="right">LICENSED COPIES · MESSAGE THE PAGE</span></div>
+</div>
+
+<!-- 09 — ClippD: Whop -------------------------------------------------------- -->
+<div class="post" id="p09" style="--accent:#FF5C8A">
+  <div class="grid"></div>
+  <div class="top">
+    <div class="brand"><img src="../public/logo-mark.png" alt="" /><span>Kris<b>Creates</b></span></div>
+    <div class="tag">CLIPPD</div>
+  </div>
+  <div class="copy">
+    <div class="kicker">PAID CLIPPING, ON AUTOPILOT</div>
+    <h2 class="sm">Thirty minutes to submit.<br />So it does it for you.</h2>
+    <p class="sub">Scans the marketplace every six hours, adds the best briefs, applies each brand's rules to every clip, files the submission inside the window, and syncs the verdicts and payouts back.</p>
+  </div>
+  <div class="media wide inset"><img src="../public/shots/clippd-campaigns.webp" alt="" /></div>
+  <div class="foot"><span>kriscreates.co.uk</span><span class="right">RUNS ON YOUR OWN MACHINE</span></div>
+</div>
+
+<!-- 10 — hire me -------------------------------------------------------------- -->
+<div class="post" id="p10" style="--accent:#93F025">
+  <div class="grid"></div>
+  <div class="top">
+    <div class="brand"><img src="../public/logo-mark.png" alt="" /><span>Kris<b>Creates</b></span></div>
+    <div class="tag">AVAILABLE</div>
+  </div>
+  <div class="copy">
+    <div class="kicker">SELF-TAUGHT SINCE 2011</div>
+    <h2>Shipped, not<br />studied.</h2>
+    <p class="sub">I learned all of it by building things that had to work for other people. If you hire remote and care more about what someone has shipped than where they've worked — the whole portfolio is one link away.</p>
+  </div>
+  <div class="media wide" style="bottom:120px; height:470px">
+    <img src="../public/shots/hero-compkit.webp" alt="" style="left:72px; width:640px; top:20px" />
+    <img src="../public/shots/hero-truckit.webp" alt="" style="left:420px; width:600px; top:180px; transform:rotate(4deg)" />
+  </div>
+  <div class="foot"><span>kriscreates.co.uk</span><span class="right">REMOTE · FULL-TIME · UK</span></div>
+</div>
+
+<!-- 11 - Pokellectr launch ------------------------------------------------- -->
+<div class="post" id="p11" style="--accent:#FFD84D">
+  <div class="grid"></div>
+  <div class="top">
+    <div class="brand"><img src="../public/logo-mark.png" alt="" /><span>Kris<b>Creates</b></span></div>
+    <div class="tag">OUT NOW</div>
+  </div>
+  <div class="copy">
+    <div class="kicker">POK&Eacute;LLECTR &middot; GOOGLE PLAY</div>
+    <h2>Scan it.<br />Then sell it.</h2>
+    <p class="sub">Scanning a card is the easy bit. Pok&eacute;llectr does the part everyone hates: it writes the eBay listing &mdash; title, set, number, rarity, finish, condition, photo &mdash; priced off what the card is worth today. Live on Google Play.</p>
+  </div>
+  <div class="media tall phones">
+    <img src="../public/shots/pokellectr-sell.webp" alt="" />
+    <img src="../public/shots/pokellectr-scan.webp" alt="" />
+  </div>
+  <div class="foot"><span>Search "Pok&eacute;llectr" on Google Play</span><span class="right">FREE &middot; SCANNING NEVER GATED</span></div>
+</div>
+
+</body>
+</html>

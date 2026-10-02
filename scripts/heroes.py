@@ -140,8 +140,8 @@ x0 += d.textlength("Poké", font=fb)
 d.text((x0, y0), "ll", font=fb, fill=gold)
 x0 += d.textlength("ll", font=fb)
 d.text((x0, y0), "ectr", font=fb, fill=navy)
-text_block(c, 92, 500, "Point. Scan. It's in your binder.",
-           "Identifies the exact printing offline, prices it, grades the centring, and keeps score while you rip the box.",
+text_block(c, 92, 500, "Scan it. Then sell it.",
+           "Identifies the exact printing offline, prices it, and writes the eBay listing for you. Out now on Google Play.",
            (17, 24, 39), (90, 80, 40), tsize=50, maxw=560)
 phone(c, OUT + r"\pokellectr-packs.webp", 1120, 170, 760, angle=-6)
 phone(c, OUT + r"\pokellectr-scan.webp", 770, 110, 820)
