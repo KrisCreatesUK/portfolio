@@ -1,4 +1,4 @@
-import { useMemo, useRef } from "react";
+import { useEffect, useMemo, useRef } from "react";
 import { useFrame } from "@react-three/fiber";
 import { useTexture, Line } from "@react-three/drei";
 import * as THREE from "three";
@@ -17,13 +17,20 @@ const PARKED = [
 
 const FOCUS = [1.85, 3.9, 1.5];
 
+/* With a project open the write-up owns the screen, so the active panel
+   climbs out of the way and the rest get out of the picture entirely. */
+const DOCKED = [-2.6, 6.6, -1.4];
+
 /* =========================================================
    A FLOATING SCREEN
    ========================================================= */
-function Panel({ project, index, total, active, dimmed, onSelect, onHover }) {
+function Panel({ project, index, total, active, dimmed, mode, onSelect, onHover }) {
   const group = useRef();
   const inner = useRef();
   const scan = useRef();
+  const shot = useRef();
+  const glitch = useRef(0);
+  const fade = useRef(1);
 
   const tex = useTexture(project.shot);
   const portrait = project.shotFit === "portrait";
@@ -48,6 +55,11 @@ function Panel({ project, index, total, active, dimmed, onSelect, onHover }) {
     [project]
   );
 
+  /* a short burst of interference whenever this screen becomes the one */
+  useEffect(() => {
+    if (active) glitch.current = 1;
+  }, [active, mode]);
+
   const target = new THREE.Vector3();
   const parked = PARKED[index % PARKED.length];
 
@@ -58,25 +70,53 @@ function Panel({ project, index, total, active, dimmed, onSelect, onHover }) {
   const ro = active ? 120 : 100;
   const overlay = { depthTest: false, depthWrite: false };
 
-  useFrame((state, dt) => {
+  useFrame((state, delta) => {
     const g = group.current;
     if (!g) return;
+    const dt = Math.min(delta, 0.05);
 
     const t = state.clock.elapsedTime;
     const bob = Math.sin(t * 0.7 + index * 2) * 0.09;
+    const open = mode === "project";
 
     /* narrow viewports can't fit the full spread, so pull everything inwards */
     const k = THREE.MathUtils.clamp(state.viewport.aspect, 0.5, 1.2) / 1.2;
 
-    if (active) target.set(FOCUS[0] * k, FOCUS[1] + bob * 0.5, FOCUS[2] * k);
+    if (open && active) target.set(DOCKED[0] * k, DOCKED[1] + bob * 0.4, DOCKED[2] * k);
+    else if (active) target.set(FOCUS[0] * k, FOCUS[1] + bob * 0.5, FOCUS[2] * k);
     else target.set(parked[0] * k, parked[1] + bob, parked[2] * k);
 
     g.position.lerp(target, 1 - Math.pow(0.001, dt));
     g.lookAt(state.camera.position);
 
+    /* fade the chorus out while a project is open */
+    const wanted = open && !active ? 0 : 1;
+    fade.current = THREE.MathUtils.damp(fade.current, wanted, 4, dt);
+    g.visible = fade.current > 0.02;
+
     if (inner.current) {
-      const s = active ? 1 : dimmed ? 0.9 : 1;
+      const s = (active ? 1 : dimmed ? 0.9 : 1) * (0.55 + fade.current * 0.45);
       inner.current.scale.setScalar(THREE.MathUtils.damp(inner.current.scale.x, s, 5, dt));
+
+      /* interference: jitter the whole screen and tear the image for a moment */
+      if (glitch.current > 0) {
+        glitch.current = Math.max(0, glitch.current - dt * 2.2);
+        const amp = glitch.current * glitch.current;
+        inner.current.position.x = (Math.random() - 0.5) * 0.5 * amp;
+        inner.current.position.y = (Math.random() - 0.5) * 0.16 * amp;
+        if (shot.current) {
+          shot.current.visible = Math.random() > 0.22 * amp;
+          shot.current.material.opacity = (active ? 1 : 0.8) * (0.4 + Math.random() * 0.6);
+        }
+      } else {
+        inner.current.position.x = 0;
+        inner.current.position.y = 0;
+        if (shot.current) {
+          shot.current.visible = true;
+          shot.current.material.opacity =
+            (active ? 1 : dimmed ? 0.55 : 0.8) * fade.current;
+        }
+      }
     }
 
     if (scan.current) {
@@ -118,7 +158,7 @@ function Panel({ project, index, total, active, dimmed, onSelect, onHover }) {
           </lineSegments>
 
           {/* the screenshot */}
-          <mesh renderOrder={ro + 2}>
+          <mesh ref={shot} renderOrder={ro + 2}>
             <planeGeometry args={[w, h]} />
             <meshBasicMaterial
               map={mapped}
@@ -168,6 +208,8 @@ function Tether({ from, to, accent, active }) {
 
   useFrame(() => {
     if (!ref.current || !to.current) return;
+    ref.current.visible = to.current.visible;
+    if (!to.current.visible) return;
     ref.current.geometry.setFromPoints([from, to.current.position]);
   });
 
@@ -186,7 +228,7 @@ function Tether({ from, to, accent, active }) {
   );
 }
 
-export default function Panels({ projects, activeId, hoverId, onSelect, onHover }) {
+export default function Panels({ projects, activeId, hoverId, mode, onSelect, onHover }) {
   return (
     <>
       {projects.map((p, i) => (
@@ -197,6 +239,7 @@ export default function Panels({ projects, activeId, hoverId, onSelect, onHover 
           total={projects.length}
           active={p.id === activeId}
           dimmed={Boolean(activeId) && p.id !== activeId && p.id !== hoverId}
+          mode={mode}
           onSelect={onSelect}
           onHover={onHover}
         />

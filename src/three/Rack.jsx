@@ -12,7 +12,7 @@ const dark = { color: "#101a18", roughness: 0.5, metalness: 0.6 };
 /* =========================================================
    ONE DRIVE
    ========================================================= */
-function Drive({ project, y, active, hovered, onSelect, onHover }) {
+function Drive({ project, y, active, hovered, open, onSelect, onHover }) {
   const group = useRef();
   const led = useRef();
   const accent = useMemo(() => new THREE.Color(project.accent), [project.accent]);
@@ -38,7 +38,9 @@ function Drive({ project, y, active, hovered, onSelect, onHover }) {
 
   useFrame((state, dt) => {
     if (!group.current) return;
-    const out = active ? 1.15 : hovered ? 0.4 : 0;
+    /* open = the project's own page is up, so its drive is fully drawn out
+       and the others sink back into the array */
+    const out = active ? (open ? 1.95 : 1.15) : hovered ? 0.4 : open ? -0.12 : 0;
     group.current.position.z = THREE.MathUtils.damp(group.current.position.z, out, 5, dt);
 
     const t = state.clock.elapsedTime;
@@ -134,7 +136,7 @@ function Drive({ project, y, active, hovered, onSelect, onHover }) {
 /* =========================================================
    THE ARRAY
    ========================================================= */
-export default function Rack({ projects, activeId, hoverId, onSelect, onHover }) {
+export default function Rack({ projects, activeId, hoverId, mode, onSelect, onHover }) {
   const capY = driveY(projects.length - 1) + PITCH * 0.72;
 
   const capTex = useMemo(
@@ -181,6 +183,7 @@ export default function Rack({ projects, activeId, hoverId, onSelect, onHover })
           y={driveY(projects.length - 1 - i)}
           active={p.id === activeId}
           hovered={p.id === hoverId}
+          open={mode === "project"}
           onSelect={onSelect}
           onHover={onHover}
         />
