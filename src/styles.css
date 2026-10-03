@@ -43,7 +43,8 @@ body {
 body.is-locked { overflow: hidden; }
 
 @media (max-width: 760px) {
-  body.is-locked { overflow: visible; }
+  /* the array fits the viewport on a phone too now, so it stays a place */
+  body.is-locked { overflow: hidden; }
 }
 
 h1, h2, h3 { margin: 0; font-weight: 600; letter-spacing: -0.02em; }
@@ -363,13 +364,21 @@ main { position: relative; z-index: 10; }
 /* =========================================================
    THE ARRAY — the full-screen view you fly around
    ========================================================= */
+/* Everything is pinned to an edge so the middle of the screen — where the
+   array actually is — stays empty. A centre column of copy would hide the
+   one thing the view exists to show. */
 .space {
   position: relative;
-  min-height: 100svh;
+  height: 100svh;
   display: grid;
-  grid-template-rows: 1fr auto;
-  gap: 20px;
-  padding: clamp(84px, 12vh, 140px) var(--pad) clamp(30px, 5vh, 58px);
+  grid-template-columns: minmax(0, 1fr) minmax(0, 310px);
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  grid-template-areas:
+    "copy  bays"
+    ".     bays"
+    "stats hint";
+  gap: 16px clamp(18px, 3vw, 44px);
+  padding: calc(var(--head-h) + 18px) var(--pad) clamp(18px, 3vh, 34px);
   /* the canvas underneath has to get the drags */
   pointer-events: none;
 }
@@ -387,44 +396,44 @@ main { position: relative; z-index: 10; }
 .space .counter { pointer-events: auto; }
 
 .space-copy {
+  grid-area: copy;
   display: flex;
   flex-direction: column;
-  gap: 20px;
-  align-self: center;
-  max-width: 620px;
+  gap: 16px;
+  align-self: start;
+  max-width: 32ch;
 }
 
 .space-copy h1 {
-  font-size: clamp(46px, 8.4vw, 104px);
+  white-space: nowrap;
+  font-size: clamp(38px, 4.8vw, 72px);
   line-height: 0.92;
   letter-spacing: -0.045em;
-  text-shadow: 0 0 60px rgba(3, 4, 4, 0.9);
+  text-shadow: 0 0 50px rgba(3, 4, 4, 0.95);
 }
 
 .lede {
-  max-width: 48ch;
+  max-width: 34ch;
   color: var(--soft);
-  font-size: clamp(15px, 1.5vw, 18px);
-  line-height: 1.6;
+  font-size: clamp(14px, 1.15vw, 16px);
+  line-height: 1.55;
+  text-shadow: 0 0 30px rgba(3, 4, 4, 0.9);
 }
 
-.hero-actions { display: flex; flex-wrap: wrap; gap: 12px; }
+.hero-actions { display: flex; flex-wrap: wrap; gap: 10px; }
 
-/* The HUD keeps to the left half. The array lives in the space it leaves —
-   that is the whole point of the view, so nothing is allowed to sit on it. */
-.space-bottom {
-  display: grid;
-  grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr);
-  gap: clamp(14px, 2vw, 30px);
-  align-items: end;
-  width: min(100%, 880px);
+/* these sit directly over the render, so they need a floor of their own */
+.hero-actions .btn:not(.btn-primary) {
+  background: rgba(6, 10, 10, 0.78);
+  backdrop-filter: blur(8px);
 }
+
+
 
 .space-hint {
-  position: absolute;
-  left: 50%;
-  bottom: 10px;
-  transform: translateX(-50%);
+  grid-area: hint;
+  align-self: end;
+  justify-self: end;
   display: flex;
   align-items: center;
   gap: 8px;
@@ -448,7 +457,9 @@ main { position: relative; z-index: 10; }
    COUNTER
    ========================================================= */
 .counter {
-  margin-top: 8px;
+  grid-area: stats;
+  align-self: end;
+  width: min(100%, 560px);
   border: 1px solid var(--line);
   border-radius: var(--radius);
   background: var(--panel);
@@ -461,7 +472,7 @@ main { position: relative; z-index: 10; }
   align-items: center;
   justify-content: space-between;
   gap: 12px;
-  padding: 9px 14px;
+  padding: 7px 12px;
   border-bottom: 1px solid var(--line);
   background: rgba(147, 240, 37, 0.035);
   font-family: var(--mono);
@@ -484,19 +495,19 @@ main { position: relative; z-index: 10; }
 
 .counter-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); }
 
-.stat { padding: 16px 14px; border-right: 1px solid var(--line); }
+.stat { padding: 11px 12px; border-right: 1px solid var(--line); }
 .stat:last-child { border-right: 0; }
 
 .stat-num {
   font-family: var(--mono);
-  font-size: clamp(24px, 2.6vw, 34px);
+  font-size: clamp(20px, 1.9vw, 26px);
   font-weight: 700;
   line-height: 1;
   color: var(--acc);
 }
 
 .stat-suffix { font-size: 0.55em; color: var(--acc-2); margin-left: 1px; }
-.stat-label { margin-top: 8px; font-size: 12.5px; color: var(--text); }
+.stat-label { margin-top: 5px; font-size: 11.5px; color: var(--text); }
 
 .stat-sub {
   margin-top: 2px;
@@ -507,15 +518,21 @@ main { position: relative; z-index: 10; }
 }
 
 /* ---- the bays ------------------------------------------------------- */
-.bay-list { display: grid; gap: 8px; }
+.bay-list {
+  grid-area: bays;
+  align-self: center;
+  display: grid;
+  gap: 8px;
+  width: 100%;
+}
 
 .bay-btn {
   --accent: var(--acc);
   position: relative;
   display: grid;
-  grid-template-columns: auto 1fr auto;
+  grid-template-columns: auto minmax(0, 1fr);
   align-items: baseline;
-  gap: 12px;
+  gap: 2px 11px;
   width: 100%;
   padding: 11px 14px;
   border: 1px solid var(--line);
@@ -538,26 +555,38 @@ main { position: relative; z-index: 10; }
 }
 
 .bay-btn-code {
+  grid-row: 1;
   font-family: var(--mono);
   font-size: 10px;
   letter-spacing: 0.1em;
   color: var(--accent);
 }
 
-.bay-btn-name { font-size: 14px; font-weight: 600; color: var(--text); }
+.bay-btn-name {
+  grid-row: 1;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
 
 .bay-btn-kind {
+  grid-column: 2;
+  grid-row: 2;
   font-family: var(--mono);
   font-size: 10px;
   letter-spacing: 0.05em;
+  line-height: 1.45;
   color: var(--muted);
 }
 
 .bay-btn-go {
   position: absolute;
   right: 14px;
-  top: 50%;
-  transform: translateY(-50%) translateX(10px);
+  bottom: 10px;
+  transform: translateX(10px);
   font-family: var(--mono);
   font-size: 10px;
   letter-spacing: 0.14em;
@@ -569,8 +598,7 @@ main { position: relative; z-index: 10; }
 }
 
 .bay-btn:hover .bay-btn-go,
-.bay-btn:focus-visible .bay-btn-go { opacity: 1; transform: translateY(-50%) translateX(0); }
-.bay-btn:hover .bay-btn-kind { opacity: 0; }
+.bay-btn:focus-visible .bay-btn-go { opacity: 1; transform: translateX(0); }
 
 /* =========================================================
    A VOLUME'S OWN PAGE
@@ -1026,21 +1054,61 @@ main { position: relative; z-index: 10; }
 /* =========================================================
    RESPONSIVE
    ========================================================= */
-@media (max-width: 1080px) {
-  .space-bottom { grid-template-columns: 1fr; }
+@media (max-width: 1180px) {
+  .space { grid-template-columns: minmax(0, 1fr) minmax(0, 268px); }
   .deck-cols { grid-template-columns: 1fr; }
 }
 
 @media (max-width: 760px) {
+  /* One screen, not a column of panels: copy at the top, the array through
+     the middle, and the bays on a rail along the bottom edge. */
   .space {
-    grid-template-rows: auto auto;
-    gap: 26px;
-    padding-top: calc(var(--head-h) + 18px);
-    min-height: 100svh;
+    height: 100svh;
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: auto minmax(0, 1fr) auto auto;
+    grid-template-areas:
+      "copy"
+      "."
+      "stats"
+      "bays";
+    gap: 10px;
+    padding: calc(var(--head-h) + 10px) var(--pad) 14px;
   }
 
-  .space-copy { align-self: start; }
+  .space-copy { align-self: start; max-width: 100%; gap: 12px; }
+  .space-copy h1 { font-size: clamp(34px, 11vw, 52px); }
+  .bay-btn-name { white-space: normal; }
+  .lede { max-width: 38ch; font-size: 14px; }
   .space-hint { display: none; }
+
+  /* the bays become a swipeable rail */
+  .bay-list {
+    align-self: end;
+    display: flex;
+    gap: 8px;
+    margin: 0 calc(var(--pad) * -1);
+    padding: 2px var(--pad) 4px;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+
+  .bay-list::-webkit-scrollbar { display: none; }
+  .bay-list li { flex: 0 0 auto; }
+  .bay-btn { width: auto; min-width: 180px; }
+  .bay-btn:hover { transform: none; }
+
+  /* and the credentials a single scrolling strip */
+  .counter { width: 100%; }
+  .counter-head { display: none; }
+  .counter-grid {
+    display: flex;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+
+  .counter-grid::-webkit-scrollbar { display: none; }
+  .stat { flex: 0 0 auto; min-width: 128px; padding: 9px 12px; }
+  .stat-sub { display: none; }
 
   /* the world is behind the copy on a phone, so lift the contrast — but
      not so far that the array disappears altogether */
@@ -1049,14 +1117,8 @@ main { position: relative; z-index: 10; }
       linear-gradient(to bottom, rgba(3, 4, 4, 0.8) 0%, rgba(3, 4, 4, 0.3) 42%, rgba(3, 4, 4, 0.85) 100%);
   }
 
-  /* three columns of text do not fit in 375px */
-  .bay-btn { grid-template-columns: auto minmax(0, 1fr); row-gap: 2px; }
-  .bay-btn-code,
-  .bay-btn-name { grid-row: 1; }
-  .bay-btn-kind { grid-column: 2; grid-row: 2; }
+  .bay-btn-kind { white-space: nowrap; }
   .bay-btn-go { display: none; }
-
-  .space-bottom { width: 100%; }
 
   .step { grid-template-columns: 1fr; gap: 10px; }
   .step-rail { flex-direction: row; align-items: center; gap: 12px; }
@@ -1065,10 +1127,6 @@ main { position: relative; z-index: 10; }
 }
 
 @media (max-width: 640px) {
-  .counter-grid { grid-template-columns: repeat(2, 1fr); }
-  .stat { border-bottom: 1px solid var(--line); }
-  .stat:nth-child(2n) { border-right: 0; }
-  .stat:nth-last-child(-n + 2) { border-bottom: 0; }
   .brand-name { display: none; }
   .deck-seq { display: none; }
   .link-tiles { grid-template-columns: 1fr; }

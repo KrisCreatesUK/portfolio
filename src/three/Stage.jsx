@@ -53,7 +53,7 @@ export default function Stage({
       className="stage-canvas"
       dpr={[1, lite ? 1.35 : 1.75]}
       gl={{ antialias: !lite, powerPreference: "high-performance" }}
-      camera={{ position: [-8.4, 5.6, 11.2], fov: 38, near: 0.1, far: 320 }}
+      camera={{ position: [-6.4, 4.8, 8.4], fov: 44, near: 0.1, far: 320 }}
       onPointerMissed={() => onHover(null)}
     >
       <color attach="background" args={["#030404"]} />

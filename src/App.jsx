@@ -164,30 +164,30 @@ export default function App() {
             </div>
           </div>
 
-          <div className="space-bottom">
-            <Counter />
+          {/* Pinned to the edges, not stacked in a column: the middle of the
+              screen belongs to the array. */}
+          <ul className="bay-list">
+            {projects.map((p) => (
+              <li key={p.id}>
+                <button
+                  className={`bay-btn ${p.id === activeId ? "is-active" : ""}`}
+                  style={{ "--accent": p.accent }}
+                  onMouseEnter={() => setHoverId(p.id)}
+                  onMouseLeave={() => setHoverId(null)}
+                  onFocus={() => setHoverId(p.id)}
+                  onBlur={() => setHoverId(null)}
+                  onClick={() => openProject(p.id)}
+                >
+                  <span className="bay-btn-code">{p.code}</span>
+                  <span className="bay-btn-name">{p.name}</span>
+                  <span className="bay-btn-kind">{p.kind}</span>
+                  <span className="bay-btn-go" aria-hidden="true">OPEN →</span>
+                </button>
+              </li>
+            ))}
+          </ul>
 
-            <ul className="bay-list">
-              {projects.map((p) => (
-                <li key={p.id}>
-                  <button
-                    className={`bay-btn ${p.id === activeId ? "is-active" : ""}`}
-                    style={{ "--accent": p.accent }}
-                    onMouseEnter={() => setHoverId(p.id)}
-                    onMouseLeave={() => setHoverId(null)}
-                    onFocus={() => setHoverId(p.id)}
-                    onBlur={() => setHoverId(null)}
-                    onClick={() => openProject(p.id)}
-                  >
-                    <span className="bay-btn-code">{p.code}</span>
-                    <span className="bay-btn-name">{p.name}</span>
-                    <span className="bay-btn-kind">{p.kind}</span>
-                    <span className="bay-btn-go" aria-hidden="true">OPEN →</span>
-                  </button>
-                </li>
-              ))}
-            </ul>
-          </div>
+          <Counter />
 
           <p className="space-hint">
             <span className="dot" /> Drag to fly around the array — click a drive to open it

@@ -27,7 +27,7 @@ import { driveY } from "./layout";
 
 const ORIGIN = new THREE.Vector3(0, 2.6, 0);
 
-const SPACE = { rad: 15.5, pol: 1.16, minRad: 7.5, maxRad: 34 };
+const SPACE = { rad: 11.4, pol: 1.2, minRad: 6.2, maxRad: 26 };
 const POLAR_MIN = 0.42; // don't fly under the floor
 const POLAR_MAX = 1.52;
 
@@ -155,7 +155,7 @@ export default function CameraRig({ mode, focusIndex, total, progressRef, reduce
     const pol = clamp(s.tPol - frame.pointer.y * 0.07 * par, POLAR_MIN, POLAR_MAX);
 
     /* a tall narrow viewport crops the array, so stand further back */
-    const pull = frame.viewport.aspect < 0.85 ? 1.42 : 1;
+    const pull = frame.viewport.aspect < 0.85 ? 1.5 : 1;
 
     const ease = mode === "project" ? 2.6 : 1.9;
     s.az = damp(s.az, az, ease, dt);
