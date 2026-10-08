@@ -82,14 +82,7 @@ export default function Stage({
           onSelect={onSelect}
           onHover={onHover}
         />
-        <Panels
-          projects={projects}
-          activeId={activeId}
-          hoverId={hoverId}
-          mode={mode}
-          onSelect={onSelect}
-          onHover={onHover}
-        />
+        <Panels projects={projects} activeId={activeId} hoverId={hoverId} mode={mode} />
       </Suspense>
 
       <Cyberspace lite={lite} />
@@ -99,6 +92,7 @@ export default function Stage({
         focusIndex={focusIndex}
         total={projects.length}
         progressRef={progressRef}
+        pointing={Boolean(hoverId)}
         reduced={reduced}
       />
     </Canvas>

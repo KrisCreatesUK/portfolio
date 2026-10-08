@@ -114,7 +114,7 @@ export default function App() {
       <Boot />
 
       {/* the world, behind everything */}
-      <div className="stage-layer">
+      <div className={`stage-layer ${hoverId ? "is-pointing" : ""}`}>
         <StageBoundary>
           <Suspense fallback={null}>
             <Stage
@@ -170,7 +170,10 @@ export default function App() {
             {projects.map((p) => (
               <li key={p.id}>
                 <button
-                  className={`bay-btn ${p.id === activeId ? "is-active" : ""}`}
+                  className={`bay-btn ${p.id === activeId ? "is-active" : ""} ${
+                    p.id === hoverId ? "is-hovered" : ""
+                  }`}
+                  data-vol={p.id}
                   style={{ "--accent": p.accent }}
                   onMouseEnter={() => setHoverId(p.id)}
                   onMouseLeave={() => setHoverId(null)}

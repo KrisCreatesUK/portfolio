@@ -34,7 +34,7 @@ const POLAR_MAX = 1.52;
 const clamp = THREE.MathUtils.clamp;
 const damp = THREE.MathUtils.damp;
 
-export default function CameraRig({ mode, focusIndex, total, progressRef, reduced = false }) {
+export default function CameraRig({ mode, focusIndex, total, progressRef, pointing, reduced = false }) {
   const { camera, gl } = useThree();
 
   const state = useRef({
@@ -70,6 +70,10 @@ export default function CameraRig({ mode, focusIndex, total, progressRef, reduce
     };
 
     const move = (e) => {
+      /* Any movement counts as "someone is using this", not just a drag.
+         Without this the idle drift carries on rotating the array while you
+         are lining up a click on one of its drives. */
+      s.idle = 0;
       if (!s.dragging) return;
       const dx = e.clientX - s.lastX;
       const dy = e.clientY - s.lastY;
@@ -142,7 +146,9 @@ export default function CameraRig({ mode, focusIndex, total, progressRef, reduce
     } else {
       /* idle drift — only once the pointer has been still a moment */
       s.idle += dt;
-      if (!s.dragging && s.idle > 2 && !reduced) {
+      /* and never drift while a drive is being pointed at — the target has to
+         stay where the person aimed */
+      if (!s.dragging && !pointing && s.idle > 2 && !reduced) {
         s.tAz += dt * 0.045;
         s.tPol += Math.sin(t * 0.09) * dt * 0.02;
       }

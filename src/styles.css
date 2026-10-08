@@ -141,6 +141,10 @@ main { position: relative; z-index: 10; }
 .stage-layer canvas { display: block; width: 100% !important; height: 100% !important; }
 .stage-layer canvas.is-dragging { cursor: grabbing; }
 
+/* a drive is under the pointer — say so, or nothing reads as clickable */
+.stage-layer.is-pointing,
+.stage-layer.is-pointing canvas { cursor: pointer; }
+
 .stage-vignette {
   position: absolute;
   inset: 0;
@@ -552,6 +556,15 @@ main { position: relative; z-index: 10; }
   border-color: var(--accent);
   background: rgba(147, 240, 37, 0.05);
   color: var(--text);
+}
+
+/* pointing at a drive in the array lights up its row here, and the other
+   way round — so it is obvious the two are the same control */
+.bay-btn.is-hovered {
+  border-color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 12%, rgba(10, 16, 16, 0.66));
+  color: var(--text);
+  transform: translateX(3px);
 }
 
 .bay-btn-code {

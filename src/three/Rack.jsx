@@ -38,10 +38,20 @@ function Drive({ project, y, active, hovered, open, onSelect, onHover }) {
 
   useFrame((state, dt) => {
     if (!group.current) return;
-    /* open = the project's own page is up, so its drive is fully drawn out
-       and the others sink back into the array */
-    const out = active ? (open ? 1.95 : 1.15) : hovered ? 0.4 : open ? -0.12 : 0;
-    group.current.position.z = THREE.MathUtils.damp(group.current.position.z, out, 5, dt);
+    /* Resting drives sit proud of the array so they read as separate things
+       you can take hold of; pointing at one pulls it out properly. */
+    /* Kept deliberately short. Every unit a drive travels towards the camera
+       also slides it down the screen, over the bay below. */
+    const out = open
+      ? active
+        ? 1.5
+        : -0.1
+      : active
+        ? 0.62
+        : hovered
+          ? 0.5
+          : 0.1;
+    group.current.position.z = THREE.MathUtils.damp(group.current.position.z, out, 6, dt);
 
     const t = state.clock.elapsedTime;
     if (led.current) {
@@ -65,6 +75,20 @@ function Drive({ project, y, active, hovered, open, onSelect, onHover }) {
       }}
       onPointerOut={() => onHover(null)}
     >
+      {/* An invisible pad across the front of the bay, filling the gaps above
+          and below the drive — without it you have to hit a 0.62-unit-tall box
+          exactly, which on a phone is no target at all.
+
+          It has to stay THIN. The camera looks down on the array, so a deep
+          box projects its top face down the screen as well; on the drive that
+          is ejected towards you that was enough to cover the whole bay below
+          and swallow its clicks. */}
+      <mesh position={[0, 0, DRIVE_D / 2 + 0.12]}>
+        <boxGeometry args={[DRIVE_W + 0.3, PITCH * 0.95, 0.24]} />
+        <meshBasicMaterial visible={false} />
+      </mesh>
+
+
       {/* chassis */}
       <RoundedBox args={[DRIVE_W, DRIVE_H, DRIVE_D]} radius={0.05} smoothness={3} castShadow>
         <meshStandardMaterial {...metal} />
@@ -80,9 +104,9 @@ function Drive({ project, y, active, hovered, open, onSelect, onHover }) {
       <lineSegments>
         <edgesGeometry args={[new THREE.BoxGeometry(DRIVE_W, DRIVE_H, DRIVE_D)]} />
         <lineBasicMaterial
-          color={active || hovered ? project.accent : "#4b6660"}
+          color={active || hovered ? project.accent : "#5b7a73"}
           transparent
-          opacity={active ? 0.95 : hovered ? 0.7 : 0.45}
+          opacity={hovered ? 1 : active ? 0.95 : 0.6}
         />
       </lineSegments>
 
@@ -104,7 +128,7 @@ function Drive({ project, y, active, hovered, open, onSelect, onHover }) {
 
       {/* accent strip along the front */}
       <mesh position={[0.62, -0.19, DRIVE_D / 2 + 0.006]}>
-        <planeGeometry args={[active ? 1.7 : hovered ? 1.0 : 0.42, 0.028]} />
+        <planeGeometry args={[active || hovered ? 1.7 : 0.42, 0.028]} />
         <meshBasicMaterial color={accent} toneMapped={false} transparent opacity={active ? 1 : 0.65} />
       </mesh>
 
@@ -126,10 +150,41 @@ function Drive({ project, y, active, hovered, open, onSelect, onHover }) {
       <pointLight
         position={[0, -0.1, DRIVE_D / 2]}
         color={accent}
-        intensity={active ? 2.6 : 0}
-        distance={3}
+        intensity={hovered ? 3.4 : active ? 2.6 : 0}
+        distance={3.4}
       />
     </group>
+  );
+}
+
+/* The lit bay behind a drive. Deliberately NOT a child of the drive: it is
+   wider and taller than one, and anything hit-testable inside the drive's
+   group bubbles to that group's handlers — which is how a glow plane ends up
+   stealing the hover from its neighbours. */
+function BayGlow({ y, colour, on }) {
+  const ref = useRef();
+
+  useFrame((state, delta) => {
+    if (!ref.current) return;
+    ref.current.material.opacity = THREE.MathUtils.damp(
+      ref.current.material.opacity,
+      on,
+      7,
+      Math.min(delta, 0.05)
+    );
+  });
+
+  return (
+    <mesh ref={ref} position={[0, y, -DRIVE_D / 2 - 0.04]} raycast={() => null}>
+      <planeGeometry args={[DRIVE_W + 1.6, PITCH + 0.65]} />
+      <meshBasicMaterial
+        color={colour}
+        transparent
+        opacity={0}
+        depthWrite={false}
+        blending={THREE.AdditiveBlending}
+      />
+    </mesh>
   );
 }
 
@@ -173,6 +228,16 @@ export default function Rack({ projects, activeId, hoverId, mode, onSelect, onHo
           <boxGeometry args={[0.14, capY, 0.14]} />
           <meshStandardMaterial {...metal} />
         </mesh>
+      ))}
+
+      {/* the lit bays sit behind the drives, outside their pointer area */}
+      {projects.map((p, i) => (
+        <BayGlow
+          key={`glow-${p.id}`}
+          y={driveY(projects.length - 1 - i)}
+          colour={p.accent}
+          on={p.id === hoverId ? 0.5 : p.id === activeId ? 0.26 : 0}
+        />
       ))}
 
       {/* drives — listed top-down, stacked bottom-up */}
