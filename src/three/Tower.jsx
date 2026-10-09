@@ -5,6 +5,7 @@ import * as THREE from "three";
 
 import { labelTexture, cover } from "./textures";
 import { FLOOR_H, TOWER_W, TOWER_D, floorY, towerTop } from "./layout";
+import { isTap } from "./gesture";
 
 /* =========================================================
    THE TOWER
@@ -98,6 +99,8 @@ function Floor({ project, index, y, featured, onSelect, onHover }) {
       ref={group}
       position={[0, y, 0]}
       onClick={(e) => {
+        /* a flight across this window is not a choice to open it */
+        if (!isTap()) return;
         e.stopPropagation();
         onSelect(project.id);
       }}
@@ -238,16 +241,139 @@ export default function Tower({ projects, featuredId, onSelect, onHover }) {
         </RoundedBox>
         <mesh position={[0, 0.21, 0]} rotation={[-Math.PI / 2, 0, 0]}>
           <planeGeometry args={[TOWER_W + 0.3, TOWER_D + 0.3]} />
-          <meshBasicMaterial map={capTex} transparent toneMapped={false} />
+          <meshBasicMaterial map={capTex} transparent opacity={0.5} toneMapped={false} />
         </mesh>
 
-        {/* mast + beacon */}
-        <mesh position={[0, 1.1, 0]}>
-          <cylinderGeometry args={[0.04, 0.05, 2, 8]} />
+        {/* the name, lit, where a building would wear it */}
+        <RoofSign />
+
+        {/* mast + beacon, off to one corner now the sign has the middle */}
+        <mesh position={[TOWER_W / 2 - 0.1, 1.5, -TOWER_D / 2 + 0.2]}>
+          <cylinderGeometry args={[0.035, 0.045, 2.6, 8]} />
           <meshStandardMaterial color="#17201f" metalness={0.8} roughness={0.4} />
         </mesh>
         <Beacon />
       </group>
+    </group>
+  );
+}
+
+/* =========================================================
+   THE ROOFTOP SIGN
+   ---------------------------------------------------------
+   The building's name, up on a gantry where a real one would
+   be. Two double-sided faces crossed at right angles, so the
+   name is readable from wherever the tour has got to rather
+   than disappearing edge-on for half of every orbit.
+
+   The glow is three things stacked: a dark backing panel so
+   it reads as a physical sign, the logo blended additively
+   so it burns rather than sits flat, and an oversized copy
+   behind it standing in for bloom. It breathes, and every
+   several seconds it stutters the way a real sign does.
+   ========================================================= */
+function RoofSign() {
+  const tex = useTexture("/kriscreates-logo-green.png");
+  const faces = useRef([]);
+  const halos = useRef([]);
+  const light = useRef();
+  const flick = useRef({ next: 5, burst: 0, level: 1 });
+
+  /* A solid box with a face on each side, not crossed planes — two planes
+     through each other read as a modelling mistake from any 3/4 angle, and
+     the tour spends most of its time at one. */
+  const BOX = 3.25;          // square in plan, so it sits on the roof
+  const W = BOX - 0.35;      // the logo inside each face
+  const H = W * (200 / 850);
+  const PANEL = H + 0.42;
+
+  const SIDES = [
+    { pos: [0, 0, BOX / 2], rot: [0, 0, 0] },
+    { pos: [0, 0, -BOX / 2], rot: [0, Math.PI, 0] },
+    { pos: [BOX / 2, 0, 0], rot: [0, Math.PI / 2, 0] },
+    { pos: [-BOX / 2, 0, 0], rot: [0, -Math.PI / 2, 0] },
+  ];
+
+  useFrame((state, delta) => {
+    const dt = Math.min(delta, 0.05);
+    const t = state.clock.elapsedTime;
+    const f = flick.current;
+
+    /* a slow breath, so it is never completely static */
+    let level = 0.88 + Math.sin(t * 1.3) * 0.12;
+
+    /* and every so often, the stutter of a tube warming up */
+    f.next -= dt;
+    if (f.next <= 0) {
+      f.burst = 0.4;
+      f.next = 7 + Math.random() * 9;
+    }
+    if (f.burst > 0) {
+      f.burst -= dt;
+      if (Math.random() > 0.55) level *= 0.22;
+    }
+
+    f.level = THREE.MathUtils.damp(f.level, level, 18, dt);
+
+    faces.current.forEach((m) => m && (m.opacity = f.level));
+    halos.current.forEach((m) => m && (m.opacity = 0.28 * f.level));
+    if (light.current) light.current.intensity = 5 + f.level * 7;
+  });
+
+  return (
+    <group position={[0, 1.5, 0]}>
+      {/* the gantry it stands on */}
+      {[-1.2, 1.2].map((x) => (
+        <mesh key={x} position={[x, -0.6, 0]}>
+          <boxGeometry args={[0.07, 0.95, 0.07]} />
+          <meshStandardMaterial color="#17201f" metalness={0.8} roughness={0.4} />
+        </mesh>
+      ))}
+
+      {/* the sign body */}
+      <mesh castShadow>
+        <boxGeometry args={[BOX, PANEL, BOX]} />
+        <meshStandardMaterial color="#050a09" metalness={0.6} roughness={0.55} />
+      </mesh>
+
+      <lineSegments>
+        <edgesGeometry args={[new THREE.BoxGeometry(BOX, PANEL, BOX)]} />
+        <lineBasicMaterial color="#93F025" transparent opacity={0.5} />
+      </lineSegments>
+
+      {SIDES.map((side, i) => (
+        <group key={i} position={side.pos} rotation={side.rot}>
+          {/* standing in for a bloom pass */}
+          <mesh position={[0, 0, 0.006]} scale={1.05} raycast={() => null}>
+            <planeGeometry args={[W, H]} />
+            <meshBasicMaterial
+              ref={(m) => (halos.current[i] = m)}
+              map={tex}
+              transparent
+              opacity={0.28}
+              toneMapped={false}
+              depthWrite={false}
+              blending={THREE.AdditiveBlending}
+            />
+          </mesh>
+
+          {/* the name itself */}
+          <mesh position={[0, 0, 0.014]} raycast={() => null}>
+            <planeGeometry args={[W, H]} />
+            <meshBasicMaterial
+              ref={(m) => (faces.current[i] = m)}
+              map={tex}
+              transparent
+              opacity={1}
+              toneMapped={false}
+              depthWrite={false}
+              blending={THREE.AdditiveBlending}
+            />
+          </mesh>
+        </group>
+      ))}
+
+      <pointLight ref={light} position={[0, 0, 0]} color="#93F025" intensity={9} distance={12} />
     </group>
   );
 }
@@ -261,7 +387,7 @@ function Beacon() {
   });
 
   return (
-    <mesh ref={ref} position={[0, 2.2, 0]}>
+    <mesh ref={ref} position={[TOWER_W / 2 - 0.1, 2.85, -TOWER_D / 2 + 0.2]}>
       <sphereGeometry args={[0.09, 16, 16]} />
       <meshStandardMaterial
         color="#ff5c5c"

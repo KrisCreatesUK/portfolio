@@ -563,15 +563,20 @@ main { position: relative; z-index: 10; }
   padding-right: 12px;
 }
 
-.showing-dots li {
-  width: 6px;
-  height: 6px;
+.showing-dots button {
+  display: block;
+  width: 8px;
+  height: 8px;
+  padding: 0;
+  border: 0;
   border-radius: 50%;
   background: var(--line-2);
+  cursor: pointer;
   transition: background 0.3s, transform 0.3s;
 }
 
-.showing-dots li.is-on { background: var(--accent); transform: scale(1.5); }
+.showing-dots button:hover { background: var(--soft); }
+.showing-dots button.is-on { background: var(--accent); transform: scale(1.5); }
 
 /* =========================================================
    COUNTER

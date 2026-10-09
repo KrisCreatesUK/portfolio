@@ -37,6 +37,7 @@ export default function Stage({
   activeId,
   hoverId,
   featuredId,
+  pickIndex,
   mode,
   progressRef,
   onSelect,
@@ -91,6 +92,7 @@ export default function Stage({
         total={projects.length}
         progressRef={progressRef}
         pointing={Boolean(hoverId)}
+        pickIndex={pickIndex}
         onFeature={onFeature}
         reduced={reduced}
       />

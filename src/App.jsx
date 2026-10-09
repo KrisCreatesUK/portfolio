@@ -56,8 +56,20 @@ export default function App() {
   /* The storey the camera is level with. The tour reports it as it rides up
      and down the building; pointing at one overrides it. */
   const [featured, setFeatured] = useState(0);
+
+  /* A storey the visitor chose rather than one the tour wandered onto. The
+     camera flies to it; the tour stands down until they stop touching
+     things. Null again once the tour takes back over. */
+  const [pick, setPick] = useState(null);
+
   const showing = projects[featured] ?? projects[0];
   const showId = hoverId ?? showing.id;
+
+  const goTo = useCallback((index) => {
+    const i = (index + projects.length) % projects.length;
+    setFeatured(i);
+    setPick(i);
+  }, []);
 
   /* How far through a write-up the reader is. Kept in a ref so scrolling
      never re-renders the scene — the camera reads it inside its own frame
@@ -128,11 +140,15 @@ export default function App() {
               activeId={activeId}
               hoverId={hoverId}
               featuredId={showId}
+              pickIndex={pick}
               mode={mode}
               progressRef={progress}
               onSelect={openProject}
               onHover={setHoverId}
-              onFeature={setFeatured}
+              onFeature={(i) => {
+                setFeatured(i);
+                setPick((cur) => (cur === i ? cur : null));
+              }}
             />
           </Suspense>
         </StageBoundary>
@@ -183,9 +199,15 @@ export default function App() {
                   }`}
                   data-vol={p.id}
                   style={{ "--accent": p.accent }}
-                  onMouseEnter={() => setHoverId(p.id)}
+                  onMouseEnter={() => {
+                    setHoverId(p.id);
+                    goTo(projects.indexOf(p));
+                  }}
                   onMouseLeave={() => setHoverId(null)}
-                  onFocus={() => setHoverId(p.id)}
+                  onFocus={() => {
+                    setHoverId(p.id);
+                    goTo(projects.indexOf(p));
+                  }}
                   onBlur={() => setHoverId(null)}
                   onClick={() => openProject(p.id)}
                 >
@@ -207,7 +229,7 @@ export default function App() {
             <button
               className="showing-step"
               aria-label="Previous volume"
-              onClick={() => setFeatured((f) => (f - 1 + projects.length) % projects.length)}
+              onClick={() => goTo(featured - 1)}
             >
               ‹
             </button>
@@ -222,18 +244,21 @@ export default function App() {
             <button
               className="showing-step"
               aria-label="Next volume"
-              onClick={() => setFeatured((f) => (f + 1) % projects.length)}
+              onClick={() => goTo(featured + 1)}
             >
               ›
             </button>
 
-            <ol className="showing-dots" aria-hidden="true">
+            <ol className="showing-dots">
               {projects.map((p, i) => (
-                <li
-                  key={p.id}
-                  className={i === featured ? "is-on" : ""}
-                  style={{ "--accent": p.accent }}
-                />
+                <li key={p.id}>
+                  <button
+                    className={i === featured ? "is-on" : ""}
+                    style={{ "--accent": p.accent }}
+                    aria-label={`Fly to ${p.name}`}
+                    onClick={() => goTo(i)}
+                  />
+                </li>
               ))}
             </ol>
           </div>

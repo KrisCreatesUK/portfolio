@@ -3,20 +3,29 @@ import { useFrame, useThree } from "@react-three/fiber";
 import * as THREE from "three";
 
 import { floorY, towerTop, FLOOR_H } from "./layout";
+import { gesture } from "./gesture";
 
 /* =========================================================
    CAMERA
    ---------------------------------------------------------
    The tour. The camera circles the building and rides up and
-   down it at the same time, so it is always arriving at a
+   down it at the same time, so it keeps arriving at a
    different storey — and whichever storey it is level with
    lights its windows and becomes the one a tap opens. You
    never have to find a target; the building brings each
    project to you.
 
-   Drag at any point and you take over: the tour stops dead
-   and you fly it yourself. Let go, leave it a moment, and
-   the tour picks up from wherever you left it.
+   But you can fly it yourself, and that is how you choose on
+   purpose rather than waiting:
+
+     drag sideways   go round the building
+     drag up / down  ride the spiral, storey to storey
+     wheel           in and out
+     ‹ › or the rail fly straight to that storey
+
+   Any of those stands the tour down. Leave it alone for a
+   few seconds and it picks up from exactly where you left
+   it, so it never jumps.
 
    project mode hands the camera to the write-up instead:
    how far you have read decides where it is.
@@ -29,7 +38,7 @@ const POLAR_MAX = 1.52;
 /* how fast the tour circles, and how fast it rides the building */
 const ORBIT_SPEED = 0.17;
 const CLIMB_SPEED = 0.28;
-const RESUME_AFTER = 2.6;   // seconds of stillness before the tour resumes
+const RESUME_AFTER = 3.2;   // seconds of stillness before the tour resumes
 
 const clamp = THREE.MathUtils.clamp;
 const damp = THREE.MathUtils.damp;
@@ -40,6 +49,7 @@ export default function CameraRig({
   total,
   progressRef,
   pointing,
+  pickIndex,
   onFeature,
   reduced = false,
 }) {
@@ -54,8 +64,9 @@ export default function CameraRig({
     tRad: SPACE.rad,
     look: new THREE.Vector3(0, floorY(total - 1), 0),
     tLook: new THREE.Vector3(0, floorY(total - 1), 0),
-    height: floorY(total - 1),   // the storey the tour is level with
-    tour: 0,                      // the tour's own clock
+    height: floorY(total - 1),    // the storey the camera is level with
+    tHeight: floorY(total - 1),   // and the one it is heading for
+    tour: 0,
     idle: 0,
     dragging: false,
     lastX: 0,
@@ -64,7 +75,7 @@ export default function CameraRig({
     featured: -1,
   });
 
-  /* ---- drag to fly, wheel to approach ------------------------------- */
+  /* ---- fly it yourself ------------------------------------------------ */
   useEffect(() => {
     const el = gl.domElement;
     const s = state.current;
@@ -73,6 +84,7 @@ export default function CameraRig({
       if (e.button !== undefined && e.button !== 0) return;
       s.dragging = true;
       s.idle = 0;
+      gesture.moved = 0;
       s.lastX = e.clientX;
       s.lastY = e.clientY;
       s.pointerId = e.pointerId;
@@ -89,13 +101,16 @@ export default function CameraRig({
       const dy = e.clientY - s.lastY;
       s.lastX = e.clientX;
       s.lastY = e.clientY;
+      gesture.moved += Math.hypot(dx, dy);
+
+      /* Sideways goes round the building, up and down rides it. Between
+         them you are flying the spiral, which is the only way to line up a
+         particular storey on purpose. */
       s.tAz -= (dx / window.innerWidth) * 3.4;
-      s.tPol = clamp(s.tPol - (dy / window.innerHeight) * 2.2, POLAR_MIN, POLAR_MAX);
-      /* dragging up and down also rides the building */
-      s.height = clamp(
-        s.height + (dy / window.innerHeight) * FLOOR_H * 3.2,
-        floorY(0) - 0.4,
-        towerTop(total)
+      s.tHeight = clamp(
+        s.tHeight + (dy / window.innerHeight) * FLOOR_H * 4,
+        floorY(0) - 0.5,
+        towerTop(total) - 0.6
       );
     };
 
@@ -128,6 +143,14 @@ export default function CameraRig({
     };
   }, [gl, mode, total]);
 
+  /* ---- a storey was picked: fly to it and hold ------------------------- */
+  useEffect(() => {
+    if (pickIndex == null || mode !== "space") return;
+    const s = state.current;
+    s.tHeight = floorY(total - 1 - pickIndex);
+    s.idle = 0;   // the tour stands down while you are choosing
+  }, [pickIndex, total, mode]);
+
   /* ---- entering or leaving a project ---------------------------------- */
   useEffect(() => {
     const s = state.current;
@@ -153,11 +176,9 @@ export default function CameraRig({
       s.tAz = -0.95 + p * 2.3;
       s.tPol = clamp(1.28 - p * 0.4, POLAR_MIN, POLAR_MAX);
       s.tRad = 9.6 + p * 4.4;
-      s.height = floorY(total - 1 - focusIndex);
-      /* Aim a little under the storey we are level with. That lifts it into
-         the upper half of the frame and lets the rest of the building fill
-         the middle, instead of one lit band with dead sky over it. */
-      s.tLook.set(0, s.height - 1.15, 0);
+      s.tHeight = floorY(total - 1 - focusIndex);
+      s.height = damp(s.height, s.tHeight, 3, dt);
+      s.tLook.set(0, s.height, 0);
     } else {
       s.idle += dt;
 
@@ -167,16 +188,22 @@ export default function CameraRig({
       if (touring) {
         s.tour += dt;
         s.tAz += dt * ORBIT_SPEED;
-        /* ride up and down the building on a slower cycle than the orbit, so
-           every pass round arrives at a different storey */
+        /* ride up and down on a slower cycle than the orbit, so every pass
+           round the building arrives at a different storey */
         const ride = (Math.sin(s.tour * CLIMB_SPEED) + 1) / 2;
-        s.height = bottom + ride * (top - bottom);
+        s.tHeight = bottom + ride * (top - bottom);
         /* almost level with the glazing — a drone looking in, not a map of
            the roof. A high angle turns the building into a box. */
         s.tPol = 1.44 - Math.sin(s.tour * CLIMB_SPEED * 0.7) * 0.1;
       }
 
-      s.tLook.set(0, s.height, 0);
+      /* the climb is always damped, so a pick is a flight and not a cut */
+      s.height = damp(s.height, s.tHeight, 3.2, dt);
+
+      /* Aim a little under the storey we are level with. That lifts it into
+         the upper half of the frame and lets the rest of the building fill
+         the middle, instead of one lit band with dead sky over it. */
+      s.tLook.set(0, s.height - 1.15, 0);
     }
 
     /* which storey is the camera level with? that one lights up */
