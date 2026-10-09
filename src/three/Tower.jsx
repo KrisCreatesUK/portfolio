@@ -1,4 +1,4 @@
-import { useMemo, useRef } from "react";
+import { useEffect, useMemo, useRef } from "react";
 import { useFrame } from "@react-three/fiber";
 import { RoundedBox, useTexture } from "@react-three/drei";
 import * as THREE from "three";
@@ -188,7 +188,150 @@ function Floor({ project, index, y, featured, onSelect, onHover }) {
   );
 }
 
-export default function Tower({ projects, featuredId, onSelect, onHover }) {
+/* =========================================================
+   FLOODLIGHTING
+   ---------------------------------------------------------
+   Ground units round the plinth washing the facade, and a
+   pair of searchlights sweeping the sky above it. The beams
+   are open cylinders blended additively — a cheap stand-in
+   for volumetric light that costs nothing and, against a
+   black sky, is most of the effect.
+   ========================================================= */
+function Beam({ from, to, colour, width = 0.26, spread = 2.6, opacity = 0.09 }) {
+  const ref = useRef();
+
+  const { mid, quat, len } = useMemo(() => {
+    const a = new THREE.Vector3(...from);
+    const b = new THREE.Vector3(...to);
+    const dir = b.clone().sub(a);
+    const len = dir.length();
+    const quat = new THREE.Quaternion().setFromUnitVectors(
+      new THREE.Vector3(0, 1, 0),
+      dir.clone().normalize()
+    );
+    return { mid: a.clone().add(dir.multiplyScalar(0.5)), quat, len };
+  }, [from, to]);
+
+  useFrame((state) => {
+    if (!ref.current) return;
+    const t = state.clock.elapsedTime;
+    ref.current.material.opacity = opacity * (0.78 + Math.sin(t * 0.9 + mid.x) * 0.22);
+  });
+
+  return (
+    <mesh ref={ref} position={mid} quaternion={quat} raycast={() => null}>
+      <cylinderGeometry args={[width * spread, width, len, 18, 1, true]} />
+      <meshBasicMaterial
+        color={colour}
+        transparent
+        opacity={opacity}
+        side={THREE.DoubleSide}
+        depthWrite={false}
+        blending={THREE.AdditiveBlending}
+      />
+    </mesh>
+  );
+}
+
+function Spot({ position, aim, colour, intensity = 55, angle = 0.5 }) {
+  const light = useRef();
+  const target = useMemo(() => new THREE.Object3D(), []);
+
+  useEffect(() => {
+    target.position.set(...aim);
+    if (light.current) light.current.target = target;
+  }, [target, aim]);
+
+  return (
+    <>
+      <primitive object={target} />
+      <spotLight
+        ref={light}
+        position={position}
+        angle={angle}
+        penumbra={0.85}
+        intensity={intensity}
+        distance={44}
+        color={colour}
+      />
+    </>
+  );
+}
+
+function Floodlights({ top, lite }) {
+  /* four units round the plinth, washing the facade */
+  const units = useMemo(() => {
+    const r = 5.4;
+    return [0, 1, 2, 3].map((i) => {
+      const a = Math.PI / 4 + (i * Math.PI) / 2;
+      return { key: i, x: Math.cos(a) * r, z: Math.sin(a) * r };
+    });
+  }, []);
+
+  const sweep = useRef();
+
+  useFrame((state, delta) => {
+    if (!sweep.current) return;
+    sweep.current.rotation.y += Math.min(delta, 0.05) * 0.12;
+  });
+
+  return (
+    <group>
+      {units.map((u) => (
+        <group key={u.key}>
+          {/* the housing on the ground */}
+          <mesh position={[u.x, 0.12, u.z]}>
+            <cylinderGeometry args={[0.24, 0.32, 0.24, 14]} />
+            <meshStandardMaterial color="#121b19" metalness={0.75} roughness={0.45} />
+          </mesh>
+          <mesh position={[u.x, 0.26, u.z]} rotation={[-Math.PI / 2, 0, 0]}>
+            <circleGeometry args={[0.2, 18]} />
+            <meshBasicMaterial color="#d6ffb0" toneMapped={false} />
+          </mesh>
+
+          <Beam
+            from={[u.x, 0.3, u.z]}
+            to={[u.x * 0.18, top + 0.6, u.z * 0.18]}
+            colour="#bdff7a"
+            width={0.2}
+            spread={3.2}
+            opacity={0.085}
+          />
+
+          <Spot
+            position={[u.x, 0.35, u.z]}
+            aim={[u.x * 0.1, top * 0.55, u.z * 0.1]}
+            colour="#cdffa0"
+            intensity={lite ? 28 : 52}
+          />
+        </group>
+      ))}
+
+      {/* two searchlights sweeping the sky over the building */}
+      {!lite && (
+        <group ref={sweep}>
+          {[0, Math.PI].map((a, i) => {
+            const x = Math.cos(a) * 13;
+            const z = Math.sin(a) * 13;
+            return (
+              <Beam
+                key={i}
+                from={[x, 0.4, z]}
+                to={[x * 0.25, top + 16, z * 0.25]}
+                colour="#93F025"
+                width={0.3}
+                spread={4.5}
+                opacity={0.05}
+              />
+            );
+          })}
+        </group>
+      )}
+    </group>
+  );
+}
+
+export default function Tower({ projects, featuredId, lite, onSelect, onHover }) {
   const top = towerTop(projects.length);
 
   const capTex = useMemo(
@@ -221,6 +364,8 @@ export default function Tower({ projects, featuredId, onSelect, onHover }) {
         <meshBasicMaterial color="#93F025" transparent opacity={0.3} side={THREE.DoubleSide} />
       </mesh>
 
+      <Floodlights top={top} lite={lite} />
+
       {/* storeys — listed top-down, stacked bottom-up */}
       {projects.map((p, i) => (
         <Floor
@@ -247,9 +392,10 @@ export default function Tower({ projects, featuredId, onSelect, onHover }) {
         {/* the name, lit, where a building would wear it */}
         <RoofSign />
 
-        {/* mast + beacon, off to one corner now the sign has the middle */}
-        <mesh position={[TOWER_W / 2 - 0.1, 1.5, -TOWER_D / 2 + 0.2]}>
-          <cylinderGeometry args={[0.035, 0.045, 2.6, 8]} />
+        {/* mast and beacon straight up the centre line, standing on the
+            sign rather than beside it */}
+        <mesh position={[0, 3.1, 0]}>
+          <cylinderGeometry args={[0.035, 0.05, 2.1, 8]} />
           <meshStandardMaterial color="#17201f" metalness={0.8} roughness={0.4} />
         </mesh>
         <Beacon />
@@ -387,7 +533,7 @@ function Beacon() {
   });
 
   return (
-    <mesh ref={ref} position={[TOWER_W / 2 - 0.1, 2.85, -TOWER_D / 2 + 0.2]}>
+    <mesh ref={ref} position={[0, 4.2, 0]}>
       <sphereGeometry args={[0.09, 16, 16]} />
       <meshStandardMaterial
         color="#ff5c5c"

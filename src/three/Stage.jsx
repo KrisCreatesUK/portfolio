@@ -4,6 +4,7 @@ import { Canvas } from "@react-three/fiber";
 import Tower from "./Tower";
 import Cyberspace from "./Cyberspace";
 import CameraRig from "./CameraRig";
+import Ship from "./Ship";
 
 /* =========================================================
    STAGE
@@ -79,12 +80,14 @@ export default function Stage({
         <Tower
           projects={projects}
           featuredId={featuredId}
+          lite={lite}
           onSelect={onSelect}
           onHover={onHover}
         />
       </Suspense>
 
       <Cyberspace lite={lite} />
+      <Ship />
 
       <CameraRig
         mode={mode}
