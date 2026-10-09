@@ -1,13 +1,18 @@
-/* Shared geometry for the array — kept out of the component files so fast
+/* Shared geometry for the tower — kept out of the component files so fast
    refresh keeps working. */
 
-export const DRIVE_W = 3.2;
-export const DRIVE_D = 2.1;
-export const DRIVE_H = 0.62;
-export const PITCH = 1.06;
-export const BASE_Y = 0.62;
+/* The array reads as a building now: one storey per project, glazed on all
+   four sides so there is always a lit window facing the camera however far
+   round it has flown. */
+export const FLOOR_H = 2.75;     // storey height
+export const TOWER_W = 4.3;      // slab width
+export const TOWER_D = 3.4;      // slab depth
+export const BASE_Y = 1.6;       // the first storey's centre
 
-export const driveY = (indexFromBottom) => BASE_Y + indexFromBottom * PITCH;
+export const floorY = (indexFromBottom) => BASE_Y + indexFromBottom * FLOOR_H;
+
+/* top of the whole stack, for the roof and the camera's ceiling */
+export const towerTop = (floors) => floorY(floors - 1) + FLOOR_H / 2;
 
 /* Small deterministic PRNG so the particle field is identical on every
    render — no impure calls during render, no flicker on fast refresh. */

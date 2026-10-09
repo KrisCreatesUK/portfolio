@@ -49,7 +49,7 @@ body.is-locked { overflow: hidden; }
 
 h1, h2, h3 { margin: 0; font-weight: 600; letter-spacing: -0.02em; }
 p { margin: 0; }
-ul { margin: 0; padding: 0; list-style: none; }
+ul, ol { margin: 0; padding: 0; list-style: none; }
 a { color: inherit; text-decoration: none; }
 [hidden] { display: none !important; }
 
@@ -380,8 +380,9 @@ main { position: relative; z-index: 10; }
   grid-template-areas:
     "copy  bays"
     ".     bays"
+    "show  show"
     "stats hint";
-  gap: 16px clamp(18px, 3vw, 44px);
+  gap: 14px clamp(18px, 3vw, 44px);
   padding: calc(var(--head-h) + 18px) var(--pad) clamp(18px, 3vh, 34px);
   /* the canvas underneath has to get the drags */
   pointer-events: none;
@@ -456,6 +457,121 @@ main { position: relative; z-index: 10; }
   background: var(--acc);
   animation: pulse 2.4s infinite;
 }
+
+/* ---------------------------------------------------------
+   NOW SHOWING — the storey the tour is level with
+   ---------------------------------------------------------
+   One target, always the same size, always in the same place.
+   The building moves; this does not. It is the whole of the
+   interface on a phone.
+--------------------------------------------------------- */
+.showing {
+  grid-area: show;
+  justify-self: center;
+  display: flex;
+  align-items: stretch;
+  gap: 6px;
+  padding: 6px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: rgba(6, 10, 10, 0.88);
+  backdrop-filter: blur(14px);
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--accent) 30%, transparent) inset;
+  transition: box-shadow 0.5s;
+}
+
+.showing-step {
+  flex: 0 0 auto;
+  width: 38px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: none;
+  color: var(--soft);
+  font-size: 20px;
+  line-height: 1;
+  cursor: pointer;
+  transition: color 0.2s, border-color 0.2s;
+}
+
+.showing-step:hover { color: var(--accent); border-color: var(--accent); }
+
+.showing-main {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  grid-template-rows: auto auto;
+  align-items: center;
+  gap: 1px 12px;
+  padding: 8px 18px;
+  border: 0;
+  border-radius: 999px;
+  background: none;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+  font: inherit;
+}
+
+.showing-code {
+  grid-column: 1;
+  grid-row: 1;
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.16em;
+  color: var(--accent);
+}
+
+.showing-name {
+  grid-column: 2;
+  grid-row: 1;
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text);
+  white-space: nowrap;
+}
+
+.showing-kind {
+  grid-column: 2;
+  grid-row: 2;
+  font-family: var(--mono);
+  font-size: 10px;
+  color: var(--muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.showing-go {
+  grid-column: 3;
+  grid-row: 1 / span 2;
+  padding: 7px 14px;
+  border-radius: 999px;
+  background: var(--accent);
+  color: #04170a;
+  font-family: var(--mono);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  white-space: nowrap;
+}
+
+.showing-main:hover .showing-go { filter: brightness(1.12); }
+
+.showing-dots {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding-right: 12px;
+}
+
+.showing-dots li {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--line-2);
+  transition: background 0.3s, transform 0.3s;
+}
+
+.showing-dots li.is-on { background: var(--accent); transform: scale(1.5); }
 
 /* =========================================================
    COUNTER
@@ -1073,70 +1189,67 @@ main { position: relative; z-index: 10; }
 }
 
 @media (max-width: 760px) {
-  /* One screen, not a column of panels: copy at the top, the array through
-     the middle, and the bays on a rail along the bottom edge. */
+  /* The building is the page. The only chrome is a line of type at the top
+     and the one control at the bottom — no rails, no panels, nothing to hunt
+     for with a thumb. */
   .space {
     height: 100svh;
     grid-template-columns: minmax(0, 1fr);
-    grid-template-rows: auto minmax(0, 1fr) auto auto;
+    grid-template-rows: auto minmax(0, 1fr) auto;
     grid-template-areas:
       "copy"
       "."
-      "stats"
-      "bays";
+      "show";
     gap: 10px;
-    padding: calc(var(--head-h) + 10px) var(--pad) 14px;
+    padding: calc(var(--head-h) + 8px) var(--pad) 18px;
   }
 
-  .space-copy { align-self: start; max-width: 100%; gap: 12px; }
-  .space-copy h1 { font-size: clamp(34px, 11vw, 52px); }
-  .bay-btn-name { white-space: normal; }
-  .lede { max-width: 38ch; font-size: 14px; }
+  .space-copy { align-self: start; max-width: 100%; gap: 8px; }
+  .space-copy h1 { font-size: clamp(30px, 9.5vw, 46px); }
+
+  .lede,
+  .hero-actions,
+  .bay-list,
+  .counter,
   .space-hint { display: none; }
 
-  /* the bays become a swipeable rail */
-  .bay-list {
-    align-self: end;
-    display: flex;
-    gap: 8px;
-    margin: 0 calc(var(--pad) * -1);
-    padding: 2px var(--pad) 4px;
-    overflow-x: auto;
-    scrollbar-width: none;
+  /* on a phone this is the whole interface, so it gets the full width and
+     the name gets a line of its own */
+  .showing { width: 100%; justify-self: stretch; padding: 7px; }
+  .showing-main {
+    flex: 1;
+    min-width: 0;
+    grid-template-columns: minmax(0, 1fr) auto;
+    padding: 8px 6px 8px 12px;
+    gap: 2px 10px;
   }
-
-  .bay-list::-webkit-scrollbar { display: none; }
-  .bay-list li { flex: 0 0 auto; }
-  .bay-btn { width: auto; min-width: 180px; }
-  .bay-btn:hover { transform: none; }
-
-  /* and the credentials a single scrolling strip */
-  .counter { width: 100%; }
-  .counter-head { display: none; }
-  .counter-grid {
-    display: flex;
-    overflow-x: auto;
-    scrollbar-width: none;
+  .showing-code { grid-column: 1; grid-row: 1; }
+  .showing-name {
+    grid-column: 1;
+    grid-row: 2;
+    font-size: 15px;
+    line-height: 1.2;
+    white-space: normal;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
   }
+  .showing-kind { display: none; }
+  .showing-go { grid-column: 2; grid-row: 1 / span 2; padding: 10px 14px; }
+  .showing-dots { display: none; }
+  .showing-step { width: 40px; font-size: 22px; }
 
-  .counter-grid::-webkit-scrollbar { display: none; }
-  .stat { flex: 0 0 auto; min-width: 128px; padding: 9px 12px; }
-  .stat-sub { display: none; }
-
-  /* the world is behind the copy on a phone, so lift the contrast — but
-     not so far that the array disappears altogether */
+  /* the world is behind the copy on a phone, so lift the contrast — but not
+     so far that the building disappears altogether */
   .view-space .stage-vignette {
     background:
-      linear-gradient(to bottom, rgba(3, 4, 4, 0.8) 0%, rgba(3, 4, 4, 0.3) 42%, rgba(3, 4, 4, 0.85) 100%);
+      linear-gradient(to bottom, rgba(3, 4, 4, 0.78) 0%, rgba(3, 4, 4, 0.22) 38%, rgba(3, 4, 4, 0.8) 100%);
   }
-
-  .bay-btn-kind { white-space: nowrap; }
-  .bay-btn-go { display: none; }
 
   .step { grid-template-columns: 1fr; gap: 10px; }
   .step-rail { flex-direction: row; align-items: center; gap: 12px; }
   .step-line { flex: 1; width: auto; height: 1px; min-height: 0; background: linear-gradient(to right, var(--accent), transparent); }
-  .step-shot.is-tall { max-width: 100%; }
 }
 
 @media (max-width: 640px) {

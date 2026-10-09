@@ -1,8 +1,7 @@
 import { Suspense, useEffect, useState } from "react";
 import { Canvas } from "@react-three/fiber";
 
-import Rack from "./Rack";
-import Panels from "./Panels";
+import Tower from "./Tower";
 import Cyberspace from "./Cyberspace";
 import CameraRig from "./CameraRig";
 
@@ -37,10 +36,12 @@ export default function Stage({
   projects,
   activeId,
   hoverId,
+  featuredId,
   mode,
   progressRef,
   onSelect,
   onHover,
+  onFeature,
 }) {
   const lite = useLite();
   const focusIndex = projects.findIndex((p) => p.id === activeId);
@@ -53,7 +54,7 @@ export default function Stage({
       className="stage-canvas"
       dpr={[1, lite ? 1.35 : 1.75]}
       gl={{ antialias: !lite, powerPreference: "high-performance" }}
-      camera={{ position: [-6.4, 4.8, 8.4], fov: 44, near: 0.1, far: 320 }}
+      camera={{ position: [-7.4, 9.2, 9.6], fov: 46, near: 0.1, far: 320 }}
       onPointerMissed={() => onHover(null)}
     >
       <color attach="background" args={["#030404"]} />
@@ -74,15 +75,12 @@ export default function Stage({
       <pointLight position={[3, 3.5, -3]} intensity={6} distance={14} color="#57B41A" />
 
       <Suspense fallback={null}>
-        <Rack
+        <Tower
           projects={projects}
-          activeId={activeId}
-          hoverId={hoverId}
-          mode={mode}
+          featuredId={featuredId}
           onSelect={onSelect}
           onHover={onHover}
         />
-        <Panels projects={projects} activeId={activeId} hoverId={hoverId} mode={mode} />
       </Suspense>
 
       <Cyberspace lite={lite} />
@@ -93,6 +91,7 @@ export default function Stage({
         total={projects.length}
         progressRef={progressRef}
         pointing={Boolean(hoverId)}
+        onFeature={onFeature}
         reduced={reduced}
       />
     </Canvas>

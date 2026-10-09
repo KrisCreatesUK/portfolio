@@ -53,6 +53,12 @@ export default function App() {
   const [hoverId, setHoverId] = useState(null);
   const [view, setView] = useState({ kind: "space" });
 
+  /* The storey the camera is level with. The tour reports it as it rides up
+     and down the building; pointing at one overrides it. */
+  const [featured, setFeatured] = useState(0);
+  const showing = projects[featured] ?? projects[0];
+  const showId = hoverId ?? showing.id;
+
   /* How far through a write-up the reader is. Kept in a ref so scrolling
      never re-renders the scene — the camera reads it inside its own frame
      loop instead. */
@@ -121,10 +127,12 @@ export default function App() {
               projects={projects}
               activeId={activeId}
               hoverId={hoverId}
+              featuredId={showId}
               mode={mode}
               progressRef={progress}
               onSelect={openProject}
               onHover={setHoverId}
+              onFeature={setFeatured}
             />
           </Suspense>
         </StageBoundary>
@@ -192,8 +200,46 @@ export default function App() {
 
           <Counter />
 
+          {/* Whatever storey the tour is level with, this is it — one target,
+              always the same size, always in the same place. Nothing to hunt
+              for on a phone. */}
+          <div className="showing" style={{ "--accent": showing.accent }}>
+            <button
+              className="showing-step"
+              aria-label="Previous volume"
+              onClick={() => setFeatured((f) => (f - 1 + projects.length) % projects.length)}
+            >
+              ‹
+            </button>
+
+            <button className="showing-main" onClick={() => openProject(showing.id)}>
+              <span className="showing-code">{showing.code}</span>
+              <span className="showing-name">{showing.name}</span>
+              <span className="showing-kind">{showing.kind}</span>
+              <span className="showing-go" aria-hidden="true">OPEN →</span>
+            </button>
+
+            <button
+              className="showing-step"
+              aria-label="Next volume"
+              onClick={() => setFeatured((f) => (f + 1) % projects.length)}
+            >
+              ›
+            </button>
+
+            <ol className="showing-dots" aria-hidden="true">
+              {projects.map((p, i) => (
+                <li
+                  key={p.id}
+                  className={i === featured ? "is-on" : ""}
+                  style={{ "--accent": p.accent }}
+                />
+              ))}
+            </ol>
+          </div>
+
           <p className="space-hint">
-            <span className="dot" /> Drag to fly around the array — click a drive to open it
+            <span className="dot" /> Drag to fly the building — tap a lit window to go in
           </p>
         </section>
 
