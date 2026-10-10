@@ -285,7 +285,7 @@ export default function Venue({ project, kind, position, facing, featured, onSel
         <LogoSign src={project.logo} accent={accent} size={sign.size} featured={featured} />
       </group>
 
-      <pointLight position={[0, 6, 7]} color={accent} intensity={featured ? 46 : 18} distance={34} />
+      <pointLight position={[0, 6, 7]} color={accent} intensity={featured ? 60 : 26} distance={46} />
     </group>
   );
 }

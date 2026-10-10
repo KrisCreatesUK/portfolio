@@ -3,7 +3,7 @@ import { useFrame } from "@react-three/fiber";
 import * as THREE from "three";
 
 import { flight } from "./flight";
-import { onStreet } from "./layout";
+import { cornerAt, roadAt } from "./layout";
 
 /* =========================================================
    THE CRAFT
@@ -12,37 +12,26 @@ import { onStreet } from "./layout";
    lamps chasing round the rim — something that has never
    heard of a runway.
 
-   It flies the streets. Earlier versions hung it off the
-   camera, which meant it rode whatever curve the camera was
-   on and sat in the same corner of the screen forever; now
-   it lives in the world and runs the circuit between the
-   venues, straight up one street, hard right at the corner,
-   straight up the next. Steering adds to its speed, so
-   flying the map pushes it along ahead of you, but it keeps
-   going on its own when you leave it alone.
+   It flies the street, a fixed distance up the road ahead of
+   the camera, so you are always following it: it goes round
+   each corner before you do, banking into the turn, and you
+   watch it do it. That is the whole reason it exists.
 
-   Because it is in the world and not pinned to the camera,
-   it is wherever it has got to — not permanently off to one
-   side, which is what it did on a phone.
+   Everything it needs is the camera's own distance along the
+   road, which is one number, so the two can never disagree
+   about where the road went.
    ========================================================= */
 
-const SIZE = 4.6;             // it is a long way off, so it is built big
-const CRUISE = 0.3;           // radians of circuit per second when catching up
-const IDLE = 0.07;            // and when it is already ahead of you
-const STEER = 0.7;            // how much your own turning pushes it along
-const CATCH = 1.7;            // how hard it runs to catch up with your view
-const LEAD = 0.08;            // and how far ahead of you it tries to sit
-/* Above the streets rather than on them: at street level it spent most of
-   its time behind the bar along the bottom of the screen. */
-const HOVER = 9;
-const CORNER = 0.09;          // how near a corner counts as being in one
+const SIZE = 3.1;
+const AHEAD = 21;             // how far up the road it flies
+const HOVER = 8;              // and how high above it
+const BANK = 0.85;
 
-const TAU = Math.PI * 2;
 const damp = THREE.MathUtils.damp;
 
 const _pos = new THREE.Vector3();
-const _ahead = new THREE.Vector3();
-const _behind = new THREE.Vector3();
+const _next = new THREE.Vector3();
+const _prev = new THREE.Vector3();
 const _aim = new THREE.Vector3();
 
 export default function Ship() {
@@ -52,11 +41,7 @@ export default function Ship() {
   const under = useRef();
   const lamps = useRef([]);
   const shown = useRef(0);
-  /* starts on the street the arrival looks down, so it is there from the
-     first frame rather than a lap away */
-  const theta = useRef(-0.12);
   const bank = useRef(0);
-  const pitch = useRef(0);
   const yaw = useRef(0);
 
   const lampAngles = useMemo(
@@ -75,56 +60,31 @@ export default function Ship() {
     if (!g.visible) return;
     g.scale.setScalar(shown.current * SIZE);
 
-    /* Along the circuit. Three things add up, and all of them are forward:
-       its own cruise, whatever your steering pushes into it, and a run to
-       catch up when your view has got ahead of it. Nothing subtracts, so it
-       never reverses back down a street: once it is in front of you it just
-       idles along until you catch it up. */
-    let gap = flight.az + LEAD - theta.current;
-    gap = ((gap % TAU) + TAU) % TAU;
-    const ahead = gap > Math.PI;                   // it is already in front
-    const rate =
-      (ahead ? IDLE : CRUISE + gap * CATCH) + Math.max(0, flight.vAz * STEER);
-    theta.current = (theta.current + rate * dt) % TAU;
-
-    onStreet(theta.current, HOVER + Math.sin(t * 1.1) * 0.22, _pos);
+    const s = flight.s + AHEAD;
+    roadAt(s, HOVER + Math.sin(t * 1.1) * 0.3, _pos);
     g.position.copy(_pos);
 
-    /* Face the way the street goes. Sampling a little either side gives the
-       direction without any special case for the corners: through one, the
-       two samples sit on different sides of it and the heading swings round
-       over a few frames, which is exactly how it should look. */
-    onStreet(theta.current + 0.05, HOVER, _ahead);
-    onStreet(theta.current - 0.05, HOVER, _behind);
-    _aim.subVectors(_ahead, _behind);
+    /* Face the way the road goes. Sampling either side gives the direction
+       with no special case for the corners: through one, the two samples sit
+       on different sides of it and the nose swings round over a few frames,
+       which is exactly how it should look. */
+    roadAt(s + 2.5, 0, _next);
+    roadAt(s - 2.5, 0, _prev);
+    _aim.subVectors(_next, _prev);
     const want = Math.atan2(_aim.x, _aim.z);
 
     let turn = want - yaw.current;
     while (turn > Math.PI) turn -= Math.PI * 2;
     while (turn < -Math.PI) turn += Math.PI * 2;
-    yaw.current += turn * Math.min(1, dt * 4.5);
+    yaw.current += turn * Math.min(1, dt * 5);
     g.rotation.set(0, yaw.current, 0);
 
-    /* How far into a corner it is: zero down a straight, one at the turn. */
-    const q = ((theta.current / (Math.PI / 2)) % 1 + 1) % 1;
-    const corner = Math.max(0, 1 - Math.min(q, 1 - q) / CORNER);
-    const dir = 1;              // it only ever flies one way round
+    /* lean into the bend, and burn harder through it */
+    const corner = cornerAt(s, 13);
+    bank.current = damp(bank.current, corner * BANK, 4, dt);
+    if (body.current) body.current.rotation.z = bank.current;
 
-    bank.current = damp(bank.current, corner * 0.75 * dir, 4, dt);
-    pitch.current = damp(
-      pitch.current,
-      THREE.MathUtils.clamp(-flight.vHeight * 0.05, -0.3, 0.3),
-      4,
-      dt
-    );
-
-    if (body.current) {
-      body.current.rotation.z = bank.current;
-      body.current.rotation.x = pitch.current;
-    }
-
-    /* the belly burns harder round a turn; the lamps chase */
-    const push = Math.min(1, 0.3 + corner * 0.45 + Math.min(rate, 2) * 0.3);
+    const push = Math.min(1, 0.3 + corner * 0.45 + Math.abs(flight.speed) * 0.02);
     if (under.current) under.current.material.opacity = 0.3 + push * 0.5;
     if (ringRef.current) ringRef.current.rotation.y = t * (0.7 + push * 3);
     lamps.current.forEach((m, i) => {
@@ -200,8 +160,8 @@ export default function Ship() {
         ))}
       </group>
 
-      {/* what it throws on the street below */}
-      <pointLight position={[0, -0.3, 0]} color="#93F025" intensity={5} distance={9} />
+      {/* what it throws on the road below */}
+      <pointLight position={[0, -0.3, 0]} color="#93F025" intensity={6} distance={11} />
     </group>
   );
 }

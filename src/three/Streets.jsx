@@ -1,63 +1,65 @@
 import { useMemo } from "react";
 import * as THREE from "three";
 
-import { STREET } from "./layout";
+import { LEG, ROAD, SETBACK } from "./layout";
 
 /* =========================================================
-   THE STREETS
+   THE STREET
    ---------------------------------------------------------
-   Four runs of road between the four venues, laid out as a
-   diamond so every junction is a right angle. The craft
-   flies these, and without them drawn it would look like it
-   was turning corners in mid-air for no reason.
+   One road round one block, with head office in the middle
+   of it: four straight runs and four right-angle corners.
 
-   Each run is one flat slab with a lit kerb down either
-   side, and a dashed centre line so you can see movement
-   along it from a long way off.
+   Drawn as a slab per side with lit kerbs and a dashed
+   centre line, plus a slip road off each side into the venue
+   built along it, so the buildings read as being on the
+   street rather than parked near it. Lamp standards down
+   both kerbs give the runs some length to them.
    ========================================================= */
 
-const WIDTH = 10;
-const DASHES = 9;
+const WIDTH = 13;
+const DASHES = 13;
+const LAMPS = 7;
 
 export default function Streets({ accent = "#57B41A" }) {
-  /* the four corners of the diamond, which are the four forecourts */
-  const runs = useMemo(() => {
-    const corner = (k) => {
-      const a = (k / 4) * Math.PI * 2;
-      return new THREE.Vector3(Math.sin(a) * STREET, 0, Math.cos(a) * STREET);
-    };
-    return [0, 1, 2, 3].map((k) => {
-      const from = corner(k);
-      const to = corner(k + 1);
-      const mid = from.clone().add(to).multiplyScalar(0.5);
-      const d = to.clone().sub(from);
-      return { key: k, mid: [mid.x, 0.06, mid.z], yaw: Math.atan2(d.x, d.z), length: d.length() };
-    });
-  }, []);
+  const sides = useMemo(
+    () =>
+      [0, 1, 2, 3].map((k) => {
+        const mid =
+          k === 0 ? [0, ROAD] : k === 1 ? [ROAD, 0] : k === 2 ? [0, -ROAD] : [-ROAD, 0];
+        /* sides 0 and 2 run along x, sides 1 and 3 along z */
+        const yaw = k === 0 || k === 2 ? Math.PI / 2 : 0;
+        const outward =
+          k === 0 ? [0, 1] : k === 1 ? [1, 0] : k === 2 ? [0, -1] : [-1, 0];
+        /* the venues on the inside of the block are reached back across it */
+        const away = k % 2 === 0 ? SETBACK : -SETBACK;
+        return { k, mid, yaw, outward, away };
+      }),
+    []
+  );
 
   return (
     <group>
-      {runs.map((r) => (
-        <group key={r.key} position={r.mid} rotation={[0, r.yaw, 0]}>
-          {/* the road */}
+      {sides.map((s) => (
+        <group key={s.k} position={[s.mid[0], 0.06, s.mid[1]]} rotation={[0, s.yaw, 0]}>
+          {/* the carriageway, run long so the corners fill in rather than
+              leaving a notch where two sides meet */}
           <mesh rotation={[-Math.PI / 2, 0, 0]} receiveShadow raycast={() => null}>
-            <planeGeometry args={[WIDTH, r.length]} />
-            <meshStandardMaterial color="#0d1412" roughness={0.9} metalness={0.1} />
+            <planeGeometry args={[WIDTH, LEG + WIDTH]} />
+            <meshStandardMaterial color="#0e1715" roughness={0.92} metalness={0.08} />
           </mesh>
 
-          {/* kerbs */}
-          {[-1, 1].map((s) => (
+          {[-1, 1].map((side) => (
             <mesh
-              key={s}
-              position={[(s * WIDTH) / 2, 0.02, 0]}
+              key={side}
+              position={[(side * WIDTH) / 2, 0.02, 0]}
               rotation={[-Math.PI / 2, 0, 0]}
               raycast={() => null}
             >
-              <planeGeometry args={[0.3, r.length]} />
+              <planeGeometry args={[0.34, LEG]} />
               <meshBasicMaterial
                 color={accent}
                 transparent
-                opacity={0.42}
+                opacity={0.45}
                 toneMapped={false}
                 depthWrite={false}
                 blending={THREE.AdditiveBlending}
@@ -65,9 +67,8 @@ export default function Streets({ accent = "#57B41A" }) {
             </mesh>
           ))}
 
-          {/* the centre line, dashed */}
           {Array.from({ length: DASHES }, (_, i) => {
-            const z = (i / (DASHES - 1) - 0.5) * (r.length - 3);
+            const z = (i / (DASHES - 1) - 0.5) * (LEG - 6);
             return (
               <mesh
                 key={z}
@@ -75,11 +76,11 @@ export default function Streets({ accent = "#57B41A" }) {
                 rotation={[-Math.PI / 2, 0, 0]}
                 raycast={() => null}
               >
-                <planeGeometry args={[0.26, 1.5]} />
+                <planeGeometry args={[0.3, 2.2]} />
                 <meshBasicMaterial
                   color={accent}
                   transparent
-                  opacity={0.3}
+                  opacity={0.34}
                   toneMapped={false}
                   depthWrite={false}
                   blending={THREE.AdditiveBlending}
@@ -87,8 +88,47 @@ export default function Streets({ accent = "#57B41A" }) {
               </mesh>
             );
           })}
+
+          {/* lamp standards down both kerbs */}
+          {Array.from({ length: LAMPS }, (_, i) => {
+            const z = (i / (LAMPS - 1) - 0.5) * (LEG - 10);
+            return [-1, 1].map((side) => (
+              <group key={z + ":" + side} position={[side * (WIDTH / 2 + 1.2), 0, z]}>
+                <mesh raycast={() => null} position={[0, 3.2, 0]}>
+                  <cylinderGeometry args={[0.12, 0.16, 6.4, 6]} />
+                  <meshStandardMaterial color="#1b2724" metalness={0.7} roughness={0.5} />
+                </mesh>
+                <mesh raycast={() => null} position={[side * -0.5, 6.5, 0]}>
+                  <boxGeometry args={[1.2, 0.18, 0.5]} />
+                  <meshStandardMaterial color="#1b2724" metalness={0.7} roughness={0.5} />
+                </mesh>
+                <mesh raycast={() => null} position={[side * -0.95, 6.32, 0]}>
+                  <sphereGeometry args={[0.28, 8, 8]} />
+                  <meshBasicMaterial color="#d8ffae" toneMapped={false} />
+                </mesh>
+              </group>
+            ));
+          })}
         </group>
       ))}
+
+      {/* the slip road from each kerb across to its frontage */}
+      {sides.map((s) => {
+        const x = s.mid[0] + s.outward[0] * (s.away / 2);
+        const z = s.mid[1] + s.outward[1] * (s.away / 2);
+        return (
+          <mesh
+            key={"slip" + s.k}
+            position={[x, 0.05, z]}
+            rotation={[-Math.PI / 2, 0, s.yaw]}
+            receiveShadow
+            raycast={() => null}
+          >
+            <planeGeometry args={[12, Math.abs(s.away) + 4]} />
+            <meshStandardMaterial color="#0e1715" roughness={0.92} metalness={0.08} />
+          </mesh>
+        );
+      })}
     </group>
   );
 }

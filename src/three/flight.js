@@ -1,25 +1,24 @@
 /* =========================================================
-   WHERE THE CAMERA IS, SHARED
+   WHERE ON THE ROAD WE ARE, SHARED
    ---------------------------------------------------------
    The camera rig keeps its state in a ref so that flying
-   never causes a React render. The ship has to sit in front
-   of that camera and bank into its turns, which means it
-   needs the same numbers every frame.
+   never causes a React render. The craft has to fly the same
+   road a little way ahead of it, which means it needs the
+   same numbers every frame.
 
-   So the rig publishes them here and the ship reads them.
+   So the rig publishes them here and the craft reads them.
    A plain mutable object on purpose: written and read inside
    frame loops, never during a render.
    ========================================================= */
 
-/* What the on-screen arrows are asking for, -1 to 1 on each axis. The HUD
-   writes it while a key or a button is held; the rig reads it every frame. */
+/* What the on-screen arrows are asking for, -1 to 1 on each axis.
+   climb is forward and back up the street; turn is looking across it.
+   The HUD writes it while a key or a button is held; the rig reads it. */
 export const input = { turn: 0, climb: 0 };
 
 export const flight = {
-  az: -0.62,       // where round the building we are
-  height: 0,       // how far up
-  rad: 13,         // how far out
-  vAz: 0,          // turn rate, for banking
-  vHeight: 0,      // climb rate, for pitch
+  s: 0,            // how far along the road
+  speed: 0,        // and how fast, for the craft's engines
+  eye: 9.5,        // how high the camera is riding
   flying: false,   // false during the arrival and inside a write-up
 };

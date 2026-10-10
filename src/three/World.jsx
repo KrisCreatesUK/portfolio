@@ -1,22 +1,20 @@
 import Hq from "./Hq";
 import Venue from "./Venue";
 import Streets from "./Streets";
-import { RING, bearingOf } from "./layout";
-import { HQ_SCALE } from "./layout";
+import { HQ_SCALE, venueAt, venueFacing } from "./layout";
 
 /* =========================================================
    THE MAP
    ---------------------------------------------------------
-   Head office in the middle, with a storey per project and
-   the product showing in the windows, and out on a ring
-   around it the place each product belongs in: a casino, a
-   services, a card shop, a cinema.
+   Head office in the middle of the block, with a storey per
+   project and the product showing in the windows, and the
+   street running round it with the place each product
+   belongs in built along it: a casino, a services, a card
+   shop, a cinema — alternating sides of the road.
 
-   Both are ways in. Press a window and you are flown out to
-   that venue; fly to the venue yourself and you get there
-   the same way. The ring is what the camera's heading is
-   measured against, so flying round the map and choosing
-   are one gesture.
+   Both are ways in. Press a window and you are driven up the
+   street to that frontage; fly up there yourself and you
+   arrive at the same place.
    ========================================================= */
 
 export default function World({ projects, featuredId, lite, onSelect, onHover }) {
@@ -34,23 +32,20 @@ export default function World({ projects, featuredId, lite, onSelect, onHover })
         />
       </group>
 
-      {projects.map((p, i) => {
-        const a = bearingOf(i, projects.length);
-        return (
-          <Venue
-            key={p.id}
-            project={p}
-            kind={p.venue}
-            position={[Math.sin(a) * RING, 0, Math.cos(a) * RING]}
-            /* each faces outward, towards the ring the camera flies, so
-               arriving at one arrives at a frontage and not a back wall */
-            facing={a}
-            featured={p.id === featuredId}
-            onSelect={onSelect}
-            onHover={onHover}
-          />
-        );
-      })}
+      {projects.map((p, i) => (
+        <Venue
+          key={p.id}
+          project={p}
+          kind={p.venue}
+          position={venueAt(i, projects.length)}
+          /* turned to face the traffic going past, so you arrive at a
+             frontage and never at the back of the building */
+          facing={venueFacing(i)}
+          featured={p.id === featuredId}
+          onSelect={onSelect}
+          onHover={onHover}
+        />
+      ))}
     </group>
   );
 }

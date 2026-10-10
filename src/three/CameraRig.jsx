@@ -4,89 +4,86 @@ import * as THREE from "three";
 
 import { gesture } from "./gesture";
 import { flight, input } from "./flight";
-import { RING, bearingOf, venueAt } from "./layout";
+import { PERIM, cornerAt, roadAt, venueAt, venueS } from "./layout";
 
 /* =========================================================
    CAMERA
    ---------------------------------------------------------
-   The camera orbits a point, and the trick of the whole map
-   is that the point moves. Far out it is head office, so you
-   circle the place and see everything at once. Come in — on
-   the wheel, or by opening a project — and it slides out to
-   the venue you are pointing at, so closing the distance
-   actually takes you there rather than pressing your nose
-   against the middle of the map.
+   You are on the road, not above the map. Everything the
+   camera knows is one number — how far along the street it
+   has got — and the street is a block with head office in
+   the middle of it, so flying forward eventually puts you
+   round a corner and into the next stretch.
 
-     drag sideways   fly round
-     drag up / down  gain and lose height
-     arrows / keys   the same, held
-     wheel           in towards what you are facing, or back
-     a tap, ‹ ›, dot fly straight to that venue
+   The venues are built along it, alternating sides. As you
+   draw level with one the camera turns its head to look at
+   it and turns back once it is behind you, the way you would
+   actually look at a shop you were passing.
 
-   Any of those stands the drift down; leave it a few seconds
-   and it picks up again from where you left it.
+     forward / back   fly up the street, or back down it
+     left / right     look across at what you are passing
+     drag             the same two, together
+     wheel            forward and back
+     a tap, a window  fly up the road to that one
 
-   Inside a write-up the camera belongs to the venue, and how
-   far you have read decides where round it you are standing.
+   Opening a project is the same number moving: it drives up
+   to that frontage and parks.
    ========================================================= */
 
-const SPACE = { rad: 64, minRad: 25, maxRad: 112 };
-const ALT = { min: 2, max: 26, start: 5 };
+const CRUISE = 6.5;           // drifting along when left alone
+const PUSH = 30;              // units a second with forward held
+const DRAG_FWD = 150;         // how far a full-screen drag carries you
+const DRAG_LOOK = 2.2;
+const FLING_DECAY = 0.08;
 
-/* Near-horizontal on purpose. A high angle turns the map into a diagram and
-   drops the buildings below the frame; flying low puts them on the skyline. */
-const POLAR_MIN = 1.05;
-const POLAR_MAX = 1.56;
-const POLAR_REST = 1.5;
+const EYE = 9.5;              // how high off the road
+const EYE_MIN = 4;
+const EYE_MAX = 30;
+const AHEAD = 26;             // how far down the road it looks
+const RISE = 5.5;             // and how far above the tarmac
 
-const ORBIT_SPEED = 0.075;    // the drift round the map when left alone
-const RESUME_AFTER = 3.2;
+const GLANCE = 36;            // from this far out it starts turning its head
+const LEVEL = 9;              // and from this close it is looking right at it
 
-/* How far a drag carries. Generous: a flick should cross the map. */
-const DRAG_AZ = 5.6;
-const DRAG_ALT = 26;
-const ARROW_AZ = 0.85;        // radians per second, while held
-const ARROW_ALT = 9;
-const FLING_DECAY = 0.055;
-const FLING_MIN = 0.0004;
+/* Head office stands in the middle of the block, which is always off to your
+   left, so the default view leans into it. Without this you drive round the
+   outside of your own building and never see it — and its windows are what
+   you press to be taken somewhere. */
+const INWARD = 0.2;
+
+/* You start outside the front door looking up at it, and pull away onto the
+   road once you touch something or after a few seconds of standing there —
+   because head office is where the whole thing starts from. */
+const HOLD = 4.5;
+const LOOK_MAX = 1.15;        // how far you can crane round, in radians
+const ARROW_LOOK = 1.1;
+const RESUME_AFTER = 3.4;
+
+const PARK_BACK = 15;         // where it stops relative to a frontage
+
+const INTRO_DUR = 3.6;
 
 function clamp(v, a, b) {
   return v < a ? a : v > b ? b : v;
 }
 const damp = THREE.MathUtils.damp;
 
-/* The camera flies a wider ring than the venues stand on, so one dead on
-   your heading would sit exactly in front of head office and black it out.
-   Holding a little short of the bearing slides it off to one side with the
-   tower behind. A narrow phone screen cannot afford as much of that. */
-const AIM_WIDE = 0.26;
-const AIM_NARROW = 0.08;
-const aimFor = (aspect) =>
-  THREE.MathUtils.lerp(AIM_NARROW, AIM_WIDE, clamp((aspect - 0.6) / 0.9, 0, 1));
-
-/* How close you are to the venue you are facing: 0 out on the wide orbit, 1
-   standing on its forecourt. Past this much the heading stops reassigning
-   which venue is live, or it would swap under you as you arrive. */
-/* On a wide screen the hero copy owns the left of the frame and the volume
-   rail the right, so the scene is panned a little into the clear band
-   between them rather than being left to sit under the rail. */
-const SHIFT_WIDE = 10;
-
-const LOCK_AT = 0.3;
-const PROJECT_RAD = 26;
-
-const INTRO_DUR = 3.6;
-const INTRO_FROM = { alt: 64, pol: 0.26, rad: 20 };
-
-/* the shortest way round from one bearing to another */
+/* the short way round the block from one distance to another */
 function shortest(from, to) {
-  let d = (to - from) % (Math.PI * 2);
-  if (d > Math.PI) d -= Math.PI * 2;
-  if (d < -Math.PI) d += Math.PI * 2;
+  let d = (to - from) % PERIM;
+  if (d > PERIM / 2) d -= PERIM;
+  if (d < -PERIM / 2) d += PERIM;
   return d;
 }
 
+const _here = new THREE.Vector3();
+const _ahead = new THREE.Vector3();
+const _dir = new THREE.Vector3();
 const _venue = new THREE.Vector3();
+const _road = new THREE.Vector3();
+const _want = new THREE.Vector3();
+const _base = new THREE.Vector3();
+const _hq = new THREE.Vector3(0, 15, 0);
 
 export default function CameraRig({
   mode,
@@ -101,29 +98,26 @@ export default function CameraRig({
   const { camera, gl } = useThree();
 
   const state = useRef({
-    az: -0.95,
-    pol: POLAR_REST,
-    rad: SPACE.rad,
-    tAz: 0,
-    tPol: POLAR_REST,
-    tRad: SPACE.rad,
-    alt: ALT.start,
-    tAlt: ALT.start,
-    centre: new THREE.Vector3(),
-    tCentre: new THREE.Vector3(),
-    look: new THREE.Vector3(0, 7, 0),
-    tLook: new THREE.Vector3(0, 7, 0),
+    /* a short way back down the road from the first frontage, which is both
+       what the bar should be showing and where the tower reads best */
+    s: venueS(0) - 26,
+    speed: 0,
+    flyTo: null,                // a distance it is driving itself to
+    look: 0,                    // how far the head is turned, radians
+    tLook: 0,
+    eye: EYE,
+    tEye: EYE,
+    target: new THREE.Vector3(),
     intro: 0,
     idle: 0,
     dragging: false,
     lastX: 0,
     lastY: 0,
     lastT: 0,
-    vAz: 0,
-    vAlt: 0,
+    vFwd: 0,
+    vLook: 0,
     pointerId: null,
-    aim: AIM_WIDE,
-    approach: 0,
+    hq: 1,                      // 1 while still looking up at head office
     featured: -1,
   });
 
@@ -137,9 +131,10 @@ export default function CameraRig({
       s.dragging = true;
       s.idle = 0;
       s.intro = null;
+      s.flyTo = null;
       gesture.moved = 0;
-      s.vAz = 0;
-      s.vAlt = 0;
+      s.vFwd = 0;
+      s.vLook = 0;
       s.lastX = e.clientX;
       s.lastY = e.clientY;
       s.lastT = e.timeStamp || performance.now();
@@ -157,17 +152,19 @@ export default function CameraRig({
       s.lastY = e.clientY;
       gesture.moved += Math.hypot(dx, dy);
 
-      const dAz = -(dx / window.innerWidth) * DRAG_AZ;
-      const dAlt = (dy / window.innerHeight) * DRAG_ALT;
+      /* sideways turns your head, up and down drives. Drag carries the
+         scene with the finger rather than steering against it. */
+      const dLook = (dx / window.innerWidth) * DRAG_LOOK;
+      const dFwd = (dy / window.innerHeight) * DRAG_FWD;
 
-      s.tAz += dAz;
-      s.tAlt = clamp(s.tAlt + dAlt, ALT.min, ALT.max);
+      s.tLook = clamp(s.tLook + dLook, -LOOK_MAX, LOOK_MAX);
+      s.s += dFwd;
 
       const now = e.timeStamp || performance.now();
       const ms = Math.max(8, now - s.lastT);
       s.lastT = now;
-      s.vAz = (dAz / ms) * 1000;
-      s.vAlt = (dAlt / ms) * 1000;
+      s.vFwd = (dFwd / ms) * 1000;
+      s.vLook = (dLook / ms) * 1000;
     };
 
     const up = () => {
@@ -177,12 +174,12 @@ export default function CameraRig({
       el.classList.remove("is-dragging");
     };
 
-    /* the wheel is the approach: in towards the venue, out to the whole map */
     const wheel = (e) => {
       if (mode !== "space") return;
       e.preventDefault();
       s.idle = 0;
-      s.tRad = clamp(s.tRad + e.deltaY * 0.03, SPACE.minRad, SPACE.maxRad);
+      s.flyTo = null;
+      s.s += e.deltaY * 0.09;
     };
 
     el.addEventListener("pointerdown", down);
@@ -200,189 +197,184 @@ export default function CameraRig({
     };
   }, [gl, mode]);
 
-  /* ---- a venue was picked from the bar: fly round to it ---------------- */
+  /* ---- a venue was picked: drive up the road to it --------------------- */
   useEffect(() => {
     if (pickIndex == null || mode !== "space") return;
     const s = state.current;
-    s.tAz += shortest(s.tAz, bearingOf(pickIndex, total) - s.aim);
+    s.flyTo = venueS(pickIndex);
     s.idle = 0;
-  }, [pickIndex, total, mode]);
+    s.intro = null;
+  }, [pickIndex, mode]);
 
   /* ---- entering or leaving a write-up ---------------------------------- */
   useEffect(() => {
     const s = state.current;
     if (mode === "project" && focusIndex >= 0) {
-      s.tRad = PROJECT_RAD;
-      s.tAlt = 6;
+      s.flyTo = venueS(focusIndex) - PARK_BACK;
+      s.tEye = 8;
     } else {
-      /* back out to the whole map */
-      s.tRad = SPACE.rad;
-      s.tAlt = ALT.start;
+      s.flyTo = null;
+      s.tEye = EYE;
     }
     s.idle = 0;
   }, [mode, focusIndex]);
 
   useFrame((frame, delta) => {
-    const s = state.current;
+    const st = state.current;
     const dt = Math.min(delta, 0.05);
-    s.aim = aimFor(frame.viewport.aspect);
 
-    if (mode === "project" && focusIndex >= 0) {
-      /* The write-up owns the camera: it stands on the venue's forecourt and
-         walks round the frontage as you read. */
-      const p = clamp(progressRef?.current ?? 0, 0, 1);
-      const bearing = bearingOf(focusIndex, total);
-      s.tAz += shortest(s.tAz, bearing + 0.55 + p * 1.5) * Math.min(1, dt * 2.2);
-      s.tAlt = 6 + p * 9;
-      s.tRad = PROJECT_RAD + p * 8;
-      s.tPol = clamp(POLAR_REST - p * 0.16, POLAR_MIN, POLAR_MAX);
-      s.alt = damp(s.alt, s.tAlt, 3, dt);
-      s.approach = damp(s.approach, 1, 2.6, dt);
-      venueAt(focusIndex, total, s.tCentre);
-      s.tLook.set(s.tCentre.x, 8, s.tCentre.z);
-      s.featured = focusIndex;
-    } else if (s.intro !== null && !reduced) {
-      /* ---- the arrival: a bird's eye of the map, then the floor drops ---
-         Timed off the clock, not off accumulated frame deltas: dt is clamped
-         so a stutter cannot fling the camera, which means on a slow device
-         the deltas stop adding up to real seconds. */
-      if (!s.intro) s.intro = frame.clock.elapsedTime;
-      const p = clamp((frame.clock.elapsedTime - s.intro) / INTRO_DUR, 0, 1);
-
+    /* ---- the arrival: dropped in over the block, then onto the road --- */
+    if (st.intro !== null && mode === "space" && !reduced) {
+      if (!st.intro) st.intro = frame.clock.elapsedTime;
+      const p = clamp((frame.clock.elapsedTime - st.intro) / INTRO_DUR, 0, 1);
       const e =
         p < 0.68
           ? 0.6 * Math.pow(p / 0.68, 2.1)
           : 0.6 + 0.4 * (1 - Math.pow(1 - (p - 0.68) / 0.32, 2.8));
 
-      s.alt = INTRO_FROM.alt + (ALT.start - INTRO_FROM.alt) * e;
-      s.tAlt = s.alt;
-      s.pol = INTRO_FROM.pol + (POLAR_REST - INTRO_FROM.pol) * e;
-      s.tPol = s.pol;
-      s.rad = INTRO_FROM.rad + (SPACE.rad - INTRO_FROM.rad) * e;
-      s.tRad = SPACE.rad;
-      /* Land a little short of the first venue's bearing rather than square
-         on it — square on, it stands exactly in front of head office. */
-      s.az = -0.95 + e * (0.95 - AIM_WIDE);
-      s.tAz = s.az;
-      s.centre.setScalar(0);
-      s.tCentre.setScalar(0);
-      s.approach = 0;
-      s.look.set(0, 7 * e, 0);
-      s.tLook.copy(s.look);
-
+      roadAt(st.s, 0, _here);
+      const high = 78 + 0;
       camera.position.set(
-        Math.sin(s.az) * Math.sin(s.pol) * s.rad,
-        Math.cos(s.pol) * s.rad + s.alt,
-        Math.cos(s.az) * Math.sin(s.pol) * s.rad
+        _here.x * (0.35 + 0.65 * e),
+        high + (EYE - high) * e,
+        _here.z * (0.35 + 0.65 * e)
       );
-      camera.lookAt(s.look);
+      roadAt(st.s + AHEAD, RISE * e, _ahead);
+      camera.lookAt(_ahead.x * e, _ahead.y + (1 - e) * 2, _ahead.z * e);
 
       flight.flying = false;
-      if (p >= 1) s.intro = null;
+      if (p >= 1) st.intro = null;
+      publish(st);
       return;
+    }
+    st.intro = null;
+
+    /* ---- how far along the road ---------------------------------------- */
+    if (mode === "project" && focusIndex >= 0) {
+      /* The write-up drives: how far you have read slides the camera past
+         the frontage and lifts it, so the building moves while you read. */
+      const p = clamp(progressRef?.current ?? 0, 0, 1);
+      const park = venueS(focusIndex) - PARK_BACK + p * 26;
+      st.s += shortest(st.s, park) * Math.min(1, dt * 1.8);
+      st.tEye = 8 + p * 11;
+      st.tLook = 0;
+      st.speed = 0;
     } else {
-      s.idle += dt;
+      st.idle += dt;
 
-      /* the arrows and the keys, while they are held */
-      if (input.turn || input.climb) {
-        s.idle = 0;
-        s.tAz += input.turn * ARROW_AZ * dt;
-        s.tAlt = clamp(s.tAlt + input.climb * ARROW_ALT * dt, ALT.min, ALT.max);
-      }
-
-      /* the throw: let go mid-swipe and it keeps going, slowing down */
-      if (!s.dragging && (Math.abs(s.vAz) > FLING_MIN || Math.abs(s.vAlt) > FLING_MIN)) {
-        s.tAz += s.vAz * dt;
-        s.tAlt = clamp(s.tAlt + s.vAlt * dt, ALT.min, ALT.max);
-        const keep = Math.pow(FLING_DECAY, dt);
-        s.vAz *= keep;
-        s.vAlt *= keep;
-        s.idle = 0;
-      }
-
-      const touring = !s.dragging && !pointing && !reduced && s.idle > RESUME_AFTER;
-      if (touring) s.tAz += dt * ORBIT_SPEED;
-
-      s.alt = damp(s.alt, s.tAlt, 4, dt);
-      s.tPol = POLAR_REST;
-
-      /* How far in the wheel has brought you, and so how far the thing being
-         orbited has slid from head office out to the venue. */
-      s.approach = clamp((SPACE.rad - s.tRad) / (SPACE.rad - SPACE.minRad), 0, 1);
-
-      /* Which venue are we pointing at? That one is live — unless we have
-         already closed on one, which keeps it live while we arrive. */
-      if (onFeature && s.approach < LOCK_AT) {
-        let nearest = 0;
-        let best = Infinity;
-        for (let i = 0; i < total; i++) {
-          const d = Math.abs(shortest(s.az + s.aim, bearingOf(i, total)));
-          if (d < best) {
-            best = d;
-            nearest = i;
-          }
+      if (st.flyTo != null) {
+        /* driving itself to a frontage */
+        const gap = shortest(st.s, st.flyTo);
+        st.s += gap * Math.min(1, dt * 1.6);
+        st.speed = 0;
+        st.idle = 0;
+        if (Math.abs(gap) < 0.6) {
+          st.flyTo = null;
+          st.idle = -4;          // sit outside it a moment before moving on
         }
-        if (nearest !== s.featured) {
-          s.featured = nearest;
-          onFeature(nearest);
+      } else {
+        /* forward and back, held */
+        if (input.climb) {
+          st.idle = 0;
+          st.speed = input.climb * PUSH;
+        } else {
+          st.speed = damp(st.speed, 0, 5, dt);
         }
+
+        /* the throw: let go mid-drag and it keeps rolling */
+        if (!st.dragging && Math.abs(st.vFwd) > 0.4) {
+          st.s += st.vFwd * dt;
+          st.vFwd *= Math.pow(FLING_DECAY, dt);
+          st.idle = 0;
+        }
+
+        /* slow into the bends, the way anything with mass would */
+        const bend = 1 - cornerAt(st.s) * 0.45;
+        st.s += st.speed * bend * dt;
+
+        const touring = !st.dragging && !pointing && !reduced && st.idle > RESUME_AFTER;
+        if (touring) st.s += CRUISE * bend * dt;
       }
 
-      const i = s.featured < 0 ? 0 : s.featured;
-      venueAt(i, total, _venue);
-      s.tCentre.copy(_venue).multiplyScalar(s.approach);
-
-      /* Aim between head office and the venue you are pointing at, so the
-         shot holds both: the venue to one side, the tower behind it. */
-      const b = bearingOf(i, total);
-      const lean = RING * 0.14 * (1 - s.approach);
-      const shift =
-        frame.viewport.aspect > 1.25 ? SHIFT_WIDE * (1 - s.approach * 0.7) : 0;
-      s.tLook.set(
-        s.tCentre.x + Math.sin(b) * lean + Math.cos(s.az) * shift,
-        7,
-        s.tCentre.z + Math.cos(b) * lean - Math.sin(s.az) * shift
-      );
+      /* looking across the street, held */
+      if (input.turn) {
+        st.idle = 0;
+        st.tLook = clamp(st.tLook - input.turn * ARROW_LOOK * dt, -LOOK_MAX, LOOK_MAX);
+      }
     }
 
-    const par = reduced || s.dragging ? 0 : 1;
-    const az = s.tAz + frame.pointer.x * 0.06 * par;
-    const pol = clamp(s.tPol - frame.pointer.y * 0.05 * par, POLAR_MIN, POLAR_MAX);
+    st.s = ((st.s % PERIM) + PERIM) % PERIM;
 
-    /* a tall narrow viewport sees less of the map, so stand back a touch */
-    const pull = frame.viewport.aspect < 0.85 ? 1.18 : 1;
+    /* ---- which one are we passing? ------------------------------------- */
+    /* The one you are coming up on, not simply the nearest: something you
+       have already gone past counts double, so the bar stays on what is in
+       front of you rather than flicking back as you clear a frontage. */
+    let nearest = 0;
+    let best = Infinity;
+    for (let i = 0; i < total; i++) {
+      const d = shortest(st.s, venueS(i));
+      const score = d >= 0 ? d : -d * 2.2;
+      if (score < best) {
+        best = score;
+        nearest = i;
+      }
+    }
+    if (onFeature && nearest !== st.featured) {
+      st.featured = nearest;
+      onFeature(nearest);
+    }
+    if (mode === "project" && focusIndex >= 0) st.featured = focusIndex;
 
-    const ease = mode === "project" ? 2.6 : 3.4;
-    s.az = damp(s.az, az, ease, dt);
-    s.pol = damp(s.pol, pol, ease, dt);
-    s.rad = damp(s.rad, s.tRad * pull, ease, dt);
-    s.centre.lerp(s.tCentre, 1 - Math.pow(0.004, dt));
+    /* ---- where the camera is, and what it is looking at ---------------- */
+    st.eye = damp(st.eye, st.tEye, 3.5, dt);
+    roadAt(st.s, st.eye, _here);
+    camera.position.copy(_here);
 
-    const sinPol = Math.sin(s.pol);
-    camera.position.set(
-      s.centre.x + Math.sin(s.az) * sinPol * s.rad,
-      Math.cos(s.pol) * s.rad + s.alt,
-      s.centre.z + Math.cos(s.az) * sinPol * s.rad
-    );
+    /* down the road, far enough ahead that a corner is rounded rather than
+       hit — the look-ahead point goes round it before the camera does */
+    roadAt(st.s + AHEAD, RISE, _road);
 
-    s.look.lerp(s.tLook, 1 - Math.pow(0.002, dt));
-    camera.lookAt(s.look);
+    /* The road, leaning into the block so the tower is in shot — and all
+       the way onto it for the first few seconds, before you pull away. */
+    if (st.dragging || st.speed || st.flyTo != null || st.idle > HOLD) {
+      st.hq = damp(st.hq, 0, 1.1, dt);
+    }
+    if (mode === "project") st.hq = 0;
+    _base.lerpVectors(_road, _hq, INWARD + (0.92 - INWARD) * st.hq);
 
-    /* hand the ship the same numbers the camera just used */
-    flight.vAz = damp(flight.vAz, (s.az - (flight.lastAz ?? s.az)) / Math.max(dt, 0.008), 6, dt);
-    flight.vHeight = damp(
-      flight.vHeight,
-      (s.alt - (flight.lastAlt ?? s.alt)) / Math.max(dt, 0.008),
-      6,
-      dt
-    );
-    flight.az = s.az;
-    flight.height = s.alt;
-    flight.rad = s.rad;
-    flight.lastAz = s.az;
-    flight.lastAlt = s.alt;
-    flight.flying = s.intro === null;
+    /* and the glance: level with a venue, the head turns right onto it */
+    venueAt(st.featured, total, _venue);
+    _venue.y = 7;
+    const near = Math.abs(shortest(st.s, venueS(st.featured)));
+    const g = clamp((GLANCE - near) / (GLANCE - LEVEL), 0, 1);
+    const glance = mode === "project" ? 1 : g * g * (3 - 2 * g);
+    _want.lerpVectors(_base, _venue, glance);
+
+    /* the head you turned yourself, on top of that */
+    st.look = damp(st.look, st.tLook, 3.2, dt);
+    if (!st.dragging && !input.turn && mode === "space" && st.idle > RESUME_AFTER) {
+      st.tLook = damp(st.tLook, 0, 1.2, dt);
+    }
+    _dir.subVectors(_want, _here);
+    /* No framing offset here on purpose: the hero copy owns the left of the
+       screen and the volume rail the right, which leaves the clear band more
+       or less centred — so what the camera is looking at is already in it. */
+    if (st.look) _dir.applyAxisAngle(UP, st.look);
+    st.target.lerp(_dir.add(_here), 1 - Math.pow(0.0015, dt));
+    camera.lookAt(st.target);
+
+    flight.flying = mode === "space";
+    publish(st);
   });
 
   return null;
+}
+
+const UP = new THREE.Vector3(0, 1, 0);
+
+/* what the craft needs to fly the same road */
+function publish(st) {
+  flight.s = st.s;
+  flight.speed = st.speed;
+  flight.eye = st.eye;
 }

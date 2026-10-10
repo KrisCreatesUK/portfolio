@@ -56,23 +56,23 @@ export default function Stage({
       className="stage-canvas"
       dpr={[1, lite ? 1.35 : 1.75]}
       gl={{ antialias: !lite, powerPreference: "high-performance" }}
-      camera={{ position: [0, 56, 20], fov: 48, near: 0.1, far: 600 }}
+      camera={{ position: [0, 60, 30], fov: 55, near: 0.1, far: 700 }}
       onPointerMissed={() => onHover(null)}
     >
       <color attach="background" args={["#030404"]} />
       {/* The map is a hundred units across, so the haze has to start past the
           far monuments or the place reads as one lit object in a black room. */}
-      <fog attach="fog" args={["#030404", 78, 340]} />
+      <fog attach="fog" args={["#030404", 70, 300]} />
 
       {/* Lights that carry the whole map, not just the middle of it. The two
           directionals have no falloff, so they are what actually models the
           monuments out on the ring; the point lights only warm head office. */}
-      <ambientLight intensity={1.35} />
-      <hemisphereLight args={["#7fe04a", "#061008", 0.7]} />
+      <ambientLight intensity={1.8} />
+      <hemisphereLight args={["#7fe04a", "#071209", 1.1]} />
       <directionalLight position={[26, 34, 22]} intensity={3.1} color="#e8ffdd" />
-      <directionalLight position={[-30, 16, -20]} intensity={1.8} color="#6fd42a" />
-      <pointLight position={[0, 4, 0]} intensity={80} distance={52} color="#93F025" />
-      <pointLight position={[0, 18, 6]} intensity={55} distance={60} color="#57B41A" />
+      <directionalLight position={[-30, 16, -20]} intensity={2.2} color="#6fd42a" />
+      <pointLight position={[0, 5, 0]} intensity={110} distance={64} color="#93F025" />
+      <pointLight position={[0, 20, 6]} intensity={70} distance={72} color="#57B41A" />
 
       <Suspense fallback={null}>
         <World

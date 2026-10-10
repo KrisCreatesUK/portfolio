@@ -64,9 +64,11 @@ function FlightPad() {
     };
   }, []);
 
-  const pad = (label, axis, value, glyph) => (
+  const pad = (name, label, axis, value, glyph) => (
     <button
-      className={`pad-key pad-${label}`}
+      /* the class is what the grid places it by, so it stays a direction
+         even though what the key does is no longer up and down */
+      className={`pad-key pad-${name}`}
       aria-label={label}
       onPointerDown={set(axis, value)}
       onPointerUp={clear}
@@ -79,11 +81,11 @@ function FlightPad() {
   );
 
   return (
-    <div className="pad" aria-label="Fly the map">
-      {pad("up", "climb", 1, "▲")}
-      {pad("left", "turn", -1, "◀")}
-      {pad("right", "turn", 1, "▶")}
-      {pad("down", "climb", -1, "▼")}
+    <div className="pad" aria-label="Fly the street">
+      {pad("up", "Fly forward", "climb", 1, "▲")}
+      {pad("left", "Look left", "turn", -1, "◀")}
+      {pad("right", "Look right", "turn", 1, "▶")}
+      {pad("down", "Fly back", "climb", -1, "▼")}
     </div>
   );
 }
@@ -326,7 +328,7 @@ export default function App() {
           <Counter />
           <FlightPad />
 
-          {/* Whatever monument you are pointing at, this is it — one target,
+          {/* Whatever you are drawing level with, this is it — one target,
               always the same size, always in the same place. Nothing to hunt
               for on a phone. */}
           <div className="showing" style={{ "--accent": showing.accent }}>
@@ -370,7 +372,7 @@ export default function App() {
           </div>
 
           <p className="space-hint">
-            <span className="dot" /> Fly the map — or tap a place to go in
+            <span className="dot" /> Fly up the street — or tap a place to go in
           </p>
         </section>
 

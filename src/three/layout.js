@@ -27,44 +27,86 @@ export function rng(seed = 20260816) {
   };
 }
 
-/* ---------------------------------------------------------
-   THE MAP
-   The projects stand on a ring around head office. The
-   camera's heading is measured against these bearings, so
-   flying round the ring and choosing a project are the same
-   gesture.
---------------------------------------------------------- */
-export const RING = 28;
-export const HQ_SCALE = 1.35;
-export const bearingOf = (index, total) => (index / total) * Math.PI * 2;
-
-/* Where a project's venue stands. The camera needs this as much as the
-   scene does: flying to a project means moving what the camera orbits. */
 /* =========================================================
-   THE STREETS
+   THE STREET
    ---------------------------------------------------------
-   The venues sit at the four corners of a diamond and the
-   streets are its sides, so getting from one to the next is
-   a straight run and a right-angle turn rather than a curve.
-   One formula gives the whole circuit: every point where the
-   distances along the two axes add up to the block size.
-   ========================================================= */
-/* Wider than the ring the venues stand on, so the circuit runs past their
-   frontages instead of through them — at RING the craft flew inside the
-   buildings, which from outside looked like it had simply vanished. */
-export const STREET = RING + 10;
+   One road, laid out as a square block with head office in
+   the middle of it. You start outside the front door, fly
+   forward, and the road turns — so the whole map is "up the
+   street, right at the end, carry on".
 
-export function onStreet(theta, y, out) {
-  const sx = Math.sin(theta);
-  const sz = Math.cos(theta);
-  const r = STREET / (Math.abs(sx) + Math.abs(sz));
-  return out.set(sx * r, y, sz * r);
+   The four venues sit along it, set back off the kerb and
+   facing the traffic, alternating sides: the first on your
+   right, the next on your left, and so on. Nothing is
+   arranged in a ring any more and nothing is orbited; you
+   pass things, which is the point.
+
+   Everything below is measured in distance along that road,
+   so "fly me to Pokellectr" and "keep going" are the same
+   number moving.
+   ========================================================= */
+export const HQ_SCALE = 1.35;
+
+export const ROAD = 36;          // half the block: the road runs x,z = +/-36
+export const SETBACK = 18;       // how far off the kerb a venue is built
+export const LEG = ROAD * 2;     // the length of one side
+export const PERIM = LEG * 4;
+
+/* Where you are when you are this far along the road. The block is square,
+   so each quarter is one straight run and the joins are the corners. */
+export function roadAt(s, y, out) {
+  const d = ((s % PERIM) + PERIM) % PERIM;
+  const leg = Math.floor(d / LEG);
+  const u = (d % LEG) - ROAD;            // -ROAD..ROAD along this side
+  if (leg === 0) return out.set(u, y, ROAD);
+  if (leg === 1) return out.set(ROAD, y, -u);
+  if (leg === 2) return out.set(-u, y, -ROAD);
+  return out.set(-ROAD, y, u);
 }
 
+/* Which way the road is pointing there. */
+export function roadDir(s, out) {
+  const d = ((s % PERIM) + PERIM) % PERIM;
+  const leg = Math.floor(d / LEG);
+  if (leg === 0) return out.set(1, 0, 0);
+  if (leg === 1) return out.set(0, 0, -1);
+  if (leg === 2) return out.set(-1, 0, 0);
+  return out.set(0, 0, 1);
+}
+
+/* How far round a corner you are, 0 down a straight and 1 at the turn —
+   used to slow down into bends and to swing the craft round them. */
+export function cornerAt(s, within = 11) {
+  const d = ((s % PERIM) + PERIM) % PERIM;
+  const toCorner = Math.abs(((d % LEG) + LEG) % LEG - LEG);
+  const near = Math.min(d % LEG, LEG - (d % LEG), toCorner);
+  return Math.max(0, 1 - near / within);
+}
+
+/* The point on the road each venue stands beside: the middle of its side. */
+export const venueS = (index) => index * LEG + ROAD;
+
+/* Which side of the road it is built on. Travelling the block this way,
+   the outside of the bend is your right and the inside is your left, so
+   alternating in and out puts them alternately right, left, right, left. */
+export const venueOutside = (index) => index % 2 === 0;
+
+/* Where it stands. Off the kerb at the middle of its side, outward for the
+   ones on your right and in towards head office for the ones on your left. */
 export function venueAt(index, total, out) {
-  const b = bearingOf(index, total);
-  const x = Math.sin(b) * RING;
-  const z = Math.cos(b) * RING;
-  if (out) return out.set(x, 0, z);
-  return [x, 0, z];
+  const away = venueOutside(index) ? SETBACK : -SETBACK;
+  const r = ROAD + away;
+  const leg = index % 4;
+  const v =
+    leg === 0 ? [0, r] : leg === 1 ? [r, 0] : leg === 2 ? [0, -r] : [-r, 0];
+  if (out) return out.set(v[0], 0, v[1]);
+  return [v[0], 0, v[1]];
+}
+
+/* Turned to face the traffic going past it. */
+export function venueFacing(index) {
+  const leg = index % 4;
+  const outward = leg === 0 ? [0, 1] : leg === 1 ? [1, 0] : leg === 2 ? [0, -1] : [-1, 0];
+  const sign = venueOutside(index) ? -1 : 1;    // outside ones look back inward
+  return Math.atan2(outward[0] * sign, outward[1] * sign);
 }
