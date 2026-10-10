@@ -67,9 +67,9 @@ export default function Stage({
       {/* Lights that carry the whole map, not just the middle of it. The two
           directionals have no falloff, so they are what actually models the
           monuments out on the ring; the point lights only warm head office. */}
-      <ambientLight intensity={1.15} />
+      <ambientLight intensity={1.35} />
       <hemisphereLight args={["#7fe04a", "#061008", 0.7]} />
-      <directionalLight position={[26, 34, 22]} intensity={2.6} color="#e8ffdd" />
+      <directionalLight position={[26, 34, 22]} intensity={3.1} color="#e8ffdd" />
       <directionalLight position={[-30, 16, -20]} intensity={1.8} color="#6fd42a" />
       <pointLight position={[0, 4, 0]} intensity={80} distance={52} color="#93F025" />
       <pointLight position={[0, 18, 6]} intensity={55} distance={60} color="#57B41A" />

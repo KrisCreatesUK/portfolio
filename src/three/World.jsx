@@ -1,5 +1,6 @@
 import Hq from "./Hq";
 import Venue from "./Venue";
+import Streets from "./Streets";
 import { RING, bearingOf } from "./layout";
 import { HQ_SCALE } from "./layout";
 
@@ -21,6 +22,8 @@ import { HQ_SCALE } from "./layout";
 export default function World({ projects, featuredId, lite, onSelect, onHover }) {
   return (
     <group>
+      <Streets />
+
       <group scale={HQ_SCALE}>
         <Hq
           lite={lite}

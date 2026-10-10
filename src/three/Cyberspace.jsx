@@ -28,9 +28,13 @@ const ACC_DEEP = "#2d650e";
    eye out to the fog so there is no visible edge.
 --------------------------------------------------------- */
 function Floor() {
+  /* The near floor covers the whole map now, so the grid tiles across it
+     rather than being stretched to fit — stretched, one cell ended up the
+     size of a city block and swamped everything standing on it. */
   const tex = useMemo(() => {
     const t = gridTexture();
-    t.wrapS = t.wrapT = THREE.ClampToEdgeWrapping;
+    t.wrapS = t.wrapT = THREE.RepeatWrapping;
+    t.repeat.set(3, 3);
     return t;
   }, []);
 
@@ -44,8 +48,8 @@ function Floor() {
   return (
     <group>
       <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.17, 0]} receiveShadow>
-        <planeGeometry args={[46, 46]} />
-        <meshBasicMaterial map={tex} transparent opacity={0.95} />
+        <planeGeometry args={[138, 138]} />
+        <meshBasicMaterial map={tex} transparent opacity={0.8} />
       </mesh>
 
       <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.2, 0]}>

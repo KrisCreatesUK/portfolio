@@ -30,7 +30,7 @@ import { RING, bearingOf, venueAt } from "./layout";
    far you have read decides where round it you are standing.
    ========================================================= */
 
-const SPACE = { rad: 64, minRad: 24, maxRad: 110 };
+const SPACE = { rad: 64, minRad: 25, maxRad: 112 };
 const ALT = { min: 2, max: 26, start: 5 };
 
 /* Near-horizontal on purpose. A high angle turns the map into a diagram and
@@ -59,7 +59,7 @@ const damp = THREE.MathUtils.damp;
    your heading would sit exactly in front of head office and black it out.
    Holding a little short of the bearing slides it off to one side with the
    tower behind. A narrow phone screen cannot afford as much of that. */
-const AIM_WIDE = 0.22;
+const AIM_WIDE = 0.26;
 const AIM_NARROW = 0.08;
 const aimFor = (aspect) =>
   THREE.MathUtils.lerp(AIM_NARROW, AIM_WIDE, clamp((aspect - 0.6) / 0.9, 0, 1));
@@ -67,6 +67,11 @@ const aimFor = (aspect) =>
 /* How close you are to the venue you are facing: 0 out on the wide orbit, 1
    standing on its forecourt. Past this much the heading stops reassigning
    which venue is live, or it would swap under you as you arrive. */
+/* On a wide screen the hero copy owns the left of the frame and the volume
+   rail the right, so the scene is panned a little into the clear band
+   between them rather than being left to sit under the rail. */
+const SHIFT_WIDE = 10;
+
 const LOCK_AT = 0.3;
 const PROJECT_RAD = 26;
 
@@ -330,8 +335,14 @@ export default function CameraRig({
       /* Aim between head office and the venue you are pointing at, so the
          shot holds both: the venue to one side, the tower behind it. */
       const b = bearingOf(i, total);
-      const lean = RING * 0.12 * (1 - s.approach);
-      s.tLook.set(s.tCentre.x + Math.sin(b) * lean, 7, s.tCentre.z + Math.cos(b) * lean);
+      const lean = RING * 0.14 * (1 - s.approach);
+      const shift =
+        frame.viewport.aspect > 1.25 ? SHIFT_WIDE * (1 - s.approach * 0.7) : 0;
+      s.tLook.set(
+        s.tCentre.x + Math.sin(b) * lean + Math.cos(s.az) * shift,
+        7,
+        s.tCentre.z + Math.cos(b) * lean - Math.sin(s.az) * shift
+      );
     }
 
     const par = reduced || s.dragging ? 0 : 1;

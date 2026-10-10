@@ -40,6 +40,27 @@ export const bearingOf = (index, total) => (index / total) * Math.PI * 2;
 
 /* Where a project's venue stands. The camera needs this as much as the
    scene does: flying to a project means moving what the camera orbits. */
+/* =========================================================
+   THE STREETS
+   ---------------------------------------------------------
+   The venues sit at the four corners of a diamond and the
+   streets are its sides, so getting from one to the next is
+   a straight run and a right-angle turn rather than a curve.
+   One formula gives the whole circuit: every point where the
+   distances along the two axes add up to the block size.
+   ========================================================= */
+/* Wider than the ring the venues stand on, so the circuit runs past their
+   frontages instead of through them — at RING the craft flew inside the
+   buildings, which from outside looked like it had simply vanished. */
+export const STREET = RING + 10;
+
+export function onStreet(theta, y, out) {
+  const sx = Math.sin(theta);
+  const sz = Math.cos(theta);
+  const r = STREET / (Math.abs(sx) + Math.abs(sz));
+  return out.set(sx * r, y, sz * r);
+}
+
 export function venueAt(index, total, out) {
   const b = bearingOf(index, total);
   const x = Math.sin(b) * RING;

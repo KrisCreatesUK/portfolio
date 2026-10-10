@@ -197,7 +197,7 @@ export default function Venue({ project, kind, position, facing, featured, onSel
     if (halo.current) {
       halo.current.material.opacity = THREE.MathUtils.damp(
         halo.current.material.opacity,
-        featured ? 0.24 : 0.05,
+        featured ? 0.19 : 0.055,
         4,
         dt
       );
@@ -254,7 +254,7 @@ export default function Venue({ project, kind, position, facing, featured, onSel
       </mesh>
 
       <mesh ref={halo} rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.02, 0.8]} raycast={() => null}>
-        <circleGeometry args={[14, 48]} />
+        <circleGeometry args={[9.5, 48]} />
         <meshBasicMaterial
           color={accent}
           transparent
@@ -285,7 +285,7 @@ export default function Venue({ project, kind, position, facing, featured, onSel
         <LogoSign src={project.logo} accent={accent} size={sign.size} featured={featured} />
       </group>
 
-      <pointLight position={[0, 6, 7]} color={accent} intensity={featured ? 34 : 12} distance={28} />
+      <pointLight position={[0, 6, 7]} color={accent} intensity={featured ? 46 : 18} distance={34} />
     </group>
   );
 }
@@ -316,14 +316,20 @@ function Casino({ accent }) {
         <meshStandardMaterial {...pale} />
       </mesh>
 
-      {/* the entrance canopy */}
-      <mesh position={[0, 3.9, 3.9]} rotation={[Math.PI / 2, 0, 0]}>
-        <cylinderGeometry args={[2.6, 2.6, 7.6, 20, 1, true, 0, Math.PI]} />
-        <meshStandardMaterial {...pale} side={THREE.DoubleSide} />
+      {/* The entrance canopy. A half-cylinder read as a tunnel aimed at the
+          camera from every angle that mattered, so it is a flat slab with a
+          lit lip — which is what a casino porte-cochere looks like anyway. */}
+      <mesh position={[0, 4.3, 4.2]} castShadow>
+        <boxGeometry args={[8.4, 0.5, 3.6]} />
+        <meshStandardMaterial {...pale} />
+      </mesh>
+      <mesh position={[0, 3.98, 4.2]}>
+        <boxGeometry args={[8.6, 0.16, 3.8]} />
+        <meshBasicMaterial color={accent} transparent opacity={0.55} toneMapped={false} />
       </mesh>
       {[-1, 1].map((s) => (
-        <mesh key={s} position={[s * 3.6, 1.95, 4.4]} castShadow>
-          <cylinderGeometry args={[0.28, 0.32, 3.9, 12]} />
+        <mesh key={s} position={[s * 3.8, 2.05, 5.5]} castShadow>
+          <cylinderGeometry args={[0.28, 0.32, 4.1, 12]} />
           <meshStandardMaterial {...pale} />
         </mesh>
       ))}
