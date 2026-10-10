@@ -3,7 +3,7 @@ import { useFrame } from "@react-three/fiber";
 import * as THREE from "three";
 
 import { flight } from "./flight";
-import { cornerAt, roadAt } from "./layout";
+import { CRAFT_AHEAD, CRAFT_HOVER, cornerAt, roadAt } from "./layout";
 
 /* =========================================================
    THE CRAFT
@@ -23,8 +23,8 @@ import { cornerAt, roadAt } from "./layout";
    ========================================================= */
 
 const SIZE = 3.1;
-const AHEAD = 21;             // how far up the road it flies
-const HOVER = 8;              // and how high above it
+const AHEAD = CRAFT_AHEAD;    // how far up the road it flies
+const HOVER = CRAFT_HOVER;    // and how high above it
 const BANK = 0.85;
 
 const damp = THREE.MathUtils.damp;
@@ -55,10 +55,29 @@ export default function Ship() {
     const dt = Math.min(delta, 0.05);
     const t = state.clock.elapsedTime;
 
-    shown.current = damp(shown.current, flight.flying ? 1 : 0, 5, dt);
+    /* During the arrival the rig is flying it, because the camera is chasing
+       it and the two cannot be allowed to disagree about where it is. */
+    const arriving = flight.intro !== null;
+    shown.current = damp(shown.current, flight.flying || arriving ? 1 : 0, 5, dt);
     g.visible = shown.current > 0.02;
     if (!g.visible) return;
     g.scale.setScalar(shown.current * SIZE);
+
+    if (arriving) {
+      g.position.set(flight.sx, flight.sy, flight.sz);
+      g.rotation.set(0, flight.syaw, 0);
+      yaw.current = flight.syaw;
+      bank.current = flight.sbank;
+      if (body.current) body.current.rotation.z = flight.sbank;
+      if (ringRef.current) ringRef.current.rotation.y = t * 3.4;
+      if (under.current) under.current.material.opacity = 0.75;
+      lamps.current.forEach((m, i) => {
+        if (!m) return;
+        const phase = (t * 2.4 + i / lampAngles.length) % 1;
+        m.opacity = 0.25 + Math.pow(1 - phase, 3) * 0.75;
+      });
+      return;
+    }
 
     const s = flight.s + AHEAD;
     roadAt(s, HOVER + Math.sin(t * 1.1) * 0.3, _pos);

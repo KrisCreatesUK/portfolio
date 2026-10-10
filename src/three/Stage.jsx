@@ -62,7 +62,7 @@ export default function Stage({
       <color attach="background" args={["#030404"]} />
       {/* The map is a hundred units across, so the haze has to start past the
           far monuments or the place reads as one lit object in a black room. */}
-      <fog attach="fog" args={["#030404", 70, 300]} />
+      <fog attach="fog" args={["#030404", 86, 380]} />
 
       {/* Lights that carry the whole map, not just the middle of it. The two
           directionals have no falloff, so they are what actually models the

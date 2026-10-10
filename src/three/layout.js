@@ -47,8 +47,17 @@ export function rng(seed = 20260816) {
    ========================================================= */
 export const HQ_SCALE = 1.35;
 
-export const ROAD = 36;          // half the block: the road runs x,z = +/-36
-export const SETBACK = 18;       // how far off the kerb a venue is built
+/* Long runs on purpose. At half this the four frontages were close enough
+   together to read as one block you were going round; at this length the
+   far side is into the haze and you are just on a street. */
+/* Where the craft rides relative to the camera. Shared, because the arrival
+   has to hand over to normal flight without the craft jumping: the fly-in
+   ends at exactly the spot it occupies for the rest of the tour. */
+export const CRAFT_AHEAD = 21;
+export const CRAFT_HOVER = 8;
+
+export const ROAD = 72;          // half the block: the road runs x,z = +/-72
+export const SETBACK = 24;       // how far off the kerb a venue is built
 export const LEG = ROAD * 2;     // the length of one side
 export const PERIM = LEG * 4;
 

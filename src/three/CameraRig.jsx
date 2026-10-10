@@ -4,7 +4,15 @@ import * as THREE from "three";
 
 import { gesture } from "./gesture";
 import { flight, input } from "./flight";
-import { PERIM, cornerAt, roadAt, venueAt, venueS } from "./layout";
+import {
+  CRAFT_AHEAD,
+  CRAFT_HOVER,
+  PERIM,
+  cornerAt,
+  roadAt,
+  venueAt,
+  venueS,
+} from "./layout";
 
 /* =========================================================
    CAMERA
@@ -30,7 +38,7 @@ import { PERIM, cornerAt, roadAt, venueAt, venueS } from "./layout";
    to that frontage and parks.
    ========================================================= */
 
-const CRUISE = 6.5;           // drifting along when left alone
+const CRUISE = 8.5;           // drifting along when left alone
 const PUSH = 30;              // units a second with forward held
 const DRAG_FWD = 150;         // how far a full-screen drag carries you
 const DRAG_LOOK = 2.2;
@@ -42,8 +50,8 @@ const EYE_MAX = 30;
 const AHEAD = 26;             // how far down the road it looks
 const RISE = 5.5;             // and how far above the tarmac
 
-const GLANCE = 36;            // from this far out it starts turning its head
-const LEVEL = 9;              // and from this close it is looking right at it
+const GLANCE = 50;            // from this far out it starts turning its head
+const LEVEL = 13;             // and from this close it is looking right at it
 
 /* Head office stands in the middle of the block, which is always off to your
    left, so the default view leans into it. Without this you drive round the
@@ -61,7 +69,26 @@ const RESUME_AFTER = 3.4;
 
 const PARK_BACK = 15;         // where it stops relative to a frontage
 
-const INTRO_DUR = 3.6;
+/* =========================================================
+   THE ARRIVAL
+   ---------------------------------------------------------
+   The craft comes down out of the sky, winds round the tower
+   on the way, and levels out over the road with the tour
+   ahead of it. You watch all of it from behind.
+
+   The last frame of it is exactly where the craft rides for
+   the rest of the tour and exactly where the camera sits to
+   follow it, so nothing jumps when the fly-in lets go.
+   ========================================================= */
+const INTRO_DUR = 6.2;
+/* Kept short: above the rooftops there is nothing to look at, so the city
+   should be under you almost immediately. */
+const DIVE = 0.22;            // the share of it spent falling
+const TURNS = 1.85;           // and how far round the tower after that
+const FROM = { r: 150, y: 165 };
+const TOP = { r: 42, y: 50 };
+const CHASE_FAR = 13;         // how far behind the craft, at the top
+const LIFT_FAR = 4.5;
 
 function clamp(v, a, b) {
   return v < a ? a : v > b ? b : v;
@@ -82,6 +109,8 @@ const _dir = new THREE.Vector3();
 const _venue = new THREE.Vector3();
 const _road = new THREE.Vector3();
 const _want = new THREE.Vector3();
+const _craft = new THREE.Vector3();
+const _end = new THREE.Vector3();
 const _base = new THREE.Vector3();
 const _hq = new THREE.Vector3(0, 15, 0);
 
@@ -100,7 +129,7 @@ export default function CameraRig({
   const state = useRef({
     /* a short way back down the road from the first frontage, which is both
        what the bar should be showing and where the tower reads best */
-    s: venueS(0) - 26,
+    s: venueS(0) - 62,
     speed: 0,
     flyTo: null,                // a distance it is driving itself to
     look: 0,                    // how far the head is turned, radians
@@ -223,31 +252,51 @@ export default function CameraRig({
     const st = state.current;
     const dt = Math.min(delta, 0.05);
 
-    /* ---- the arrival: dropped in over the block, then onto the road --- */
+    /* ---- the arrival ---------------------------------------------------
+       Timed off the clock, not off accumulated frame deltas: dt is clamped
+       so a stutter cannot fling the camera, which means on a slow device the
+       deltas stop adding up to real seconds. */
     if (st.intro !== null && mode === "space" && !reduced) {
       if (!st.intro) st.intro = frame.clock.elapsedTime;
       const p = clamp((frame.clock.elapsedTime - st.intro) / INTRO_DUR, 0, 1);
-      const e =
-        p < 0.68
-          ? 0.6 * Math.pow(p / 0.68, 2.1)
-          : 0.6 + 0.4 * (1 - Math.pow(1 - (p - 0.68) / 0.32, 2.8));
 
-      roadAt(st.s, 0, _here);
-      const high = 78 + 0;
+      arrivalAt(p, st.s, _craft);
+      arrivalAt(Math.min(1, p + 0.01), st.s, _ahead);
+      _dir.subVectors(_ahead, _craft);
+      if (_dir.lengthSq() < 1e-6) _dir.set(0, 0, 1);
+      _dir.normalize();
+
+      /* the chase closes up as it comes down, finishing exactly where the
+         camera rides behind the craft for the rest of the tour */
+      const k = p * p * (3 - 2 * p);
+      const back = CHASE_FAR + (CRAFT_AHEAD - CHASE_FAR) * k;
+      const lift = LIFT_FAR + (EYE - CRAFT_HOVER - LIFT_FAR) * k;
+
       camera.position.set(
-        _here.x * (0.35 + 0.65 * e),
-        high + (EYE - high) * e,
-        _here.z * (0.35 + 0.65 * e)
+        _craft.x - _dir.x * back,
+        _craft.y - _dir.y * back + lift,
+        _craft.z - _dir.z * back
       );
-      roadAt(st.s + AHEAD, RISE * e, _ahead);
-      camera.lookAt(_ahead.x * e, _ahead.y + (1 - e) * 2, _ahead.z * e);
+      camera.lookAt(_craft.x + _dir.x * 9, _craft.y + _dir.y * 9 + 1.8, _craft.z + _dir.z * 9);
 
+      /* hand the craft the seat the rig has flown it to */
+      flight.intro = p;
+      flight.sx = _craft.x;
+      flight.sy = _craft.y;
+      flight.sz = _craft.z;
+      flight.syaw = Math.atan2(_dir.x, _dir.z);
+      flight.sbank = p > DIVE && p < 0.93 ? 0.55 : 0;
       flight.flying = false;
-      if (p >= 1) st.intro = null;
+
+      if (p >= 1) {
+        st.intro = null;
+        flight.intro = null;
+      }
       publish(st);
       return;
     }
     st.intro = null;
+    flight.intro = null;
 
     /* ---- how far along the road ---------------------------------------- */
     if (mode === "project" && focusIndex >= 0) {
@@ -371,6 +420,36 @@ export default function CameraRig({
 }
 
 const UP = new THREE.Vector3(0, 1, 0);
+
+/* Where the craft is, this far through the arrival. Out of the sky first,
+   then a widening spiral round the tower that lands on the exact spot it
+   occupies in normal flight — which is what makes the hand-off invisible. */
+function arrivalAt(p, s0, out) {
+  roadAt(s0 + CRAFT_AHEAD, CRAFT_HOVER, _end);
+  const aEnd = Math.atan2(_end.x, _end.z);
+  const rEnd = Math.hypot(_end.x, _end.z);
+  const aTop = aEnd - TURNS * Math.PI * 2;
+
+  if (p < DIVE) {
+    /* falling, and getting faster */
+    const k = p / DIVE;
+    const e = k * k;
+    const sx = Math.sin(aTop);
+    const sz = Math.cos(aTop);
+    return out.set(
+      sx * (FROM.r + (TOP.r - FROM.r) * e),
+      FROM.y + (TOP.y - FROM.y) * e,
+      sz * (FROM.r + (TOP.r - FROM.r) * e)
+    );
+  }
+
+  const k = (p - DIVE) / (1 - DIVE);
+  const e = k < 0.5 ? 2 * k * k : 1 - Math.pow(-2 * k + 2, 2) / 2;
+  const a = aTop + TURNS * Math.PI * 2 * e;
+  const r = TOP.r + (rEnd - TOP.r) * e;
+  const y = TOP.y + (CRAFT_HOVER - TOP.y) * e;
+  return out.set(Math.sin(a) * r, y, Math.cos(a) * r);
+}
 
 /* what the craft needs to fly the same road */
 function publish(st) {

@@ -17,6 +17,15 @@
 export const input = { turn: 0, climb: 0 };
 
 export const flight = {
+  /* the arrival: 0 to 1 while the craft is flying itself in, null after.
+     While it is running the rig drives the craft and publishes where it
+     put it, because the camera is chasing it and the two cannot disagree. */
+  intro: 0,
+  sx: 0,
+  sy: 0,
+  sz: 0,
+  syaw: 0,
+  sbank: 0,
   s: 0,            // how far along the road
   speed: 0,        // and how fast, for the craft's engines
   eye: 9.5,        // how high the camera is riding

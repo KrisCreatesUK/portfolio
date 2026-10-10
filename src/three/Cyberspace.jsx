@@ -34,7 +34,7 @@ function Floor() {
   const tex = useMemo(() => {
     const t = gridTexture();
     t.wrapS = t.wrapT = THREE.RepeatWrapping;
-    t.repeat.set(5, 5);
+    t.repeat.set(7, 7);
     return t;
   }, []);
 
@@ -48,7 +48,7 @@ function Floor() {
   return (
     <group>
       <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.17, 0]} receiveShadow>
-        <planeGeometry args={[220, 220]} />
+        <planeGeometry args={[320, 320]} />
         <meshBasicMaterial map={tex} transparent opacity={0.8} />
       </mesh>
 
