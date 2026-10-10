@@ -53,7 +53,7 @@ export const HQ_SCALE = 1.35;
 /* Where the craft rides relative to the camera. Shared, because the arrival
    has to hand over to normal flight without the craft jumping: the fly-in
    ends at exactly the spot it occupies for the rest of the tour. */
-export const CRAFT_AHEAD = 21;
+export const CRAFT_AHEAD = 17;
 export const CRAFT_HOVER = 8;
 
 export const ROAD = 72;          // half the block: the road runs x,z = +/-72

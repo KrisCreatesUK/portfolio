@@ -47,17 +47,22 @@ const FLING_DECAY = 0.08;
 const EYE = 9.5;              // how high off the road
 const EYE_MIN = 4;
 const EYE_MAX = 30;
-const AHEAD = 26;             // how far down the road it looks
-const RISE = 5.5;             // and how far above the tarmac
 
-const GLANCE = 50;            // from this far out it starts turning its head
-const LEVEL = 13;             // and from this close it is looking right at it
+/* The glance at a frontage as you go past. It is a turn of the head, not a
+   change of subject: the camera is following the craft, and swinging all the
+   way onto a building threw the craft out of shot and left you watching
+   scenery. So it is capped — and the cap is smaller on a phone, which has
+   far less width to spend before the craft is off the edge of it. */
+const GLANCE = 46;            // from this far out it starts turning its head
+const LEVEL = 10;             // and from this close the turn is at full
+const GLANCE_WIDE = 0.5;      // how far it will crane, in radians
+const GLANCE_NARROW = 0.22;
 
-/* Head office stands in the middle of the block, which is always off to your
-   left, so the default view leans into it. Without this you drive round the
-   outside of your own building and never see it — and its windows are what
-   you press to be taken somewhere. */
-const INWARD = 0.2;
+/* Head office gets the view entirely while you are still parked outside the
+   front door, and none of it once you pull away: any standing lean towards
+   the middle of the block turns the camera off the road, and the craft ends
+   up pinned to one side of the screen instead of out in front of you. */
+const INWARD = 0;
 
 /* You start outside the front door looking up at it, and pull away onto the
    road once you touch something or after a few seconds of standing there —
@@ -147,6 +152,7 @@ export default function CameraRig({
     vLook: 0,
     pointerId: null,
     hq: 1,                      // 1 while still looking up at head office
+    glance: 0,                  // how far the head is turned to a frontage
     featured: -1,
   });
 
@@ -379,28 +385,45 @@ export default function CameraRig({
     roadAt(st.s, st.eye, _here);
     camera.position.copy(_here);
 
-    /* down the road, far enough ahead that a corner is rounded rather than
-       hit — the look-ahead point goes round it before the camera does */
-    roadAt(st.s + AHEAD, RISE, _road);
+    /* What the camera is actually following is the craft: it is a little
+       way up the road, it rounds every corner before the camera does, and
+       looking just past it keeps it in shot and the bend anticipated. */
+    roadAt(st.s + CRAFT_AHEAD + 9, CRAFT_HOVER + 1.4, _road);
 
-    /* The road, leaning into the block so the tower is in shot — and all
-       the way onto it for the first few seconds, before you pull away. */
+    /* Leaning into the block while you are still outside the front door,
+       all the way onto it for the first few seconds before you pull away. */
     if (st.dragging || st.speed || st.flyTo != null || st.idle > HOLD) {
       st.hq = damp(st.hq, 0, 1.1, dt);
     }
     if (mode === "project") st.hq = 0;
     _base.lerpVectors(_road, _hq, INWARD + (0.92 - INWARD) * st.hq);
 
-    /* and the glance: level with a venue, the head turns right onto it */
+    /* and the glance: going past a frontage the head turns towards it and
+       back again — as far as it is allowed to, and no further */
     venueAt(st.featured, total, _venue);
     _venue.y = 7;
     const near = Math.abs(shortest(st.s, venueS(st.featured)));
     const g = clamp((GLANCE - near) / (GLANCE - LEVEL), 0, 1);
-    const glance = mode === "project" ? 1 : g * g * (3 - 2 * g);
-    _want.lerpVectors(_base, _venue, glance);
+    const glance = g * g * (3 - 2 * g);
+
+    if (mode === "project") {
+      /* a write-up is the one time the building really is the subject */
+      _want.copy(_venue);
+      st.glance = 0;
+    } else {
+      _want.copy(_base);
+      const cap = frame.viewport.aspect > 1.25 ? GLANCE_WIDE : GLANCE_NARROW;
+      const toVenue = Math.atan2(_venue.x - _here.x, _venue.z - _here.z);
+      const toBase = Math.atan2(_want.x - _here.x, _want.z - _here.z);
+      let swing = toVenue - toBase;
+      while (swing > Math.PI) swing -= Math.PI * 2;
+      while (swing < -Math.PI) swing += Math.PI * 2;
+      st.glance = damp(st.glance, clamp(swing, -cap, cap) * glance, 4, dt);
+    }
 
     /* the head you turned yourself, on top of that */
     st.look = damp(st.look, st.tLook, 3.2, dt);
+    const head = st.look + st.glance;
     if (!st.dragging && !input.turn && mode === "space" && st.idle > RESUME_AFTER) {
       st.tLook = damp(st.tLook, 0, 1.2, dt);
     }
@@ -408,7 +431,7 @@ export default function CameraRig({
     /* No framing offset here on purpose: the hero copy owns the left of the
        screen and the volume rail the right, which leaves the clear band more
        or less centred — so what the camera is looking at is already in it. */
-    if (st.look) _dir.applyAxisAngle(UP, st.look);
+    if (head) _dir.applyAxisAngle(UP, head);
     st.target.lerp(_dir.add(_here), 1 - Math.pow(0.0015, dt));
     camera.lookAt(st.target);
 

@@ -64,28 +64,27 @@ function FlightPad() {
     };
   }, []);
 
-  const pad = (name, label, axis, value, glyph) => (
-    <button
-      /* the class is what the grid places it by, so it stays a direction
-         even though what the key does is no longer up and down */
-      className={`pad-key pad-${name}`}
-      aria-label={label}
-      onPointerDown={set(axis, value)}
-      onPointerUp={clear}
-      onPointerLeave={clear}
-      onPointerCancel={clear}
-      onBlur={clear}
-    >
-      <span aria-hidden="true">{glyph}</span>
-    </button>
-  );
+  /* One control: the throttle. Looking around is the drag, and going
+     backwards is something nobody wanted to do, so the other three keys
+     have gone — they were three more things in the way of the view.
 
+     It must not light up, select, or keep a focus ring after a tap: on a
+     phone a held button was ending up highlighted and staying that way. */
   return (
-    <div className="pad" aria-label="Fly the street">
-      {pad("up", "Fly forward", "climb", 1, "▲")}
-      {pad("left", "Look left", "turn", -1, "◀")}
-      {pad("right", "Look right", "turn", 1, "▶")}
-      {pad("down", "Fly back", "climb", -1, "▼")}
+    <div className="pad">
+      <button
+        className="throttle"
+        aria-label="Fly forward"
+        onContextMenu={(e) => e.preventDefault()}
+        onPointerDown={set("climb", 1)}
+        onPointerUp={clear}
+        onPointerLeave={clear}
+        onPointerCancel={clear}
+        onBlur={clear}
+      >
+        <span className="throttle-arrow" aria-hidden="true" />
+        <span className="throttle-word" aria-hidden="true">GO</span>
+      </button>
     </div>
   );
 }

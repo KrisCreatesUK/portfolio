@@ -22,7 +22,7 @@ import { CRAFT_AHEAD, CRAFT_HOVER, cornerAt, roadAt } from "./layout";
    about where the road went.
    ========================================================= */
 
-const SIZE = 3.1;
+const SIZE = 4.2;
 const AHEAD = CRAFT_AHEAD;    // how far up the road it flies
 const HOVER = CRAFT_HOVER;    // and how high above it
 const BANK = 0.85;
