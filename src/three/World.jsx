@@ -37,6 +37,7 @@ export default function World({ projects, featuredId, lite, onSelect, onHover })
           key={p.id}
           project={p}
           kind={p.venue}
+          lite={lite}
           position={venueAt(i, projects.length)}
           /* turned to face the traffic going past, so you arrive at a
              frontage and never at the back of the building */

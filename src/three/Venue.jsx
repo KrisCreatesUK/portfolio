@@ -1,4 +1,4 @@
-import { useMemo, useRef } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useFrame } from "@react-three/fiber";
 import { RoundedBox, useTexture } from "@react-three/drei";
 import * as THREE from "three";
@@ -159,26 +159,108 @@ function LogoSign({ src, accent, size, featured }) {
   );
 }
 
-export default function Venue({ project, kind, position, facing, featured, onSelect, onHover }) {
+/* =========================================================
+   WHAT IS ON THE SCREEN
+   ---------------------------------------------------------
+   The product itself, running, in the device it runs on: a
+   handset for the three apps and a monitor for the one that
+   does not have one. They are the real marketing clips, cut
+   short and small — the screen is a few metres wide at the
+   far side of a street, so there is no point carrying more.
+
+   Only the place you are level with plays. The rest hold a
+   still of the same shot, which costs nothing and means four
+   videos are never decoding at once. A phone gets the still
+   throughout: the gain is small on a screen that size and
+   the cost in battery is not.
+   ========================================================= */
+function useScreen(project, aspect) {
+  const still = useTexture(project.poster ?? project.shot);
+
+  const map = useMemo(() => {
+    const t = still.clone();
+    t.colorSpace = THREE.SRGBColorSpace;
+    return cover(t, aspect);
+  }, [still, aspect]);
+
+  /* Made once and never replaced, so nothing here ever sets state. Which
+     texture is actually on the screen is decided frame by frame instead:
+     the still until the video has frames to show, the video after that. */
+  const [media] = useState(() => {
+    if (!project.clip || typeof document === "undefined") return null;
+    const v = document.createElement("video");
+    v.loop = true;
+    v.muted = true;
+    v.defaultMuted = true;
+    v.playsInline = true;
+    v.preload = "none";
+    const t = new THREE.VideoTexture(v);
+    t.colorSpace = THREE.SRGBColorSpace;
+    return { v, t, src: project.clip };
+  });
+
+  useEffect(() => {
+    if (!media) return undefined;
+    /* It has to be in the document: a detached element will not reliably
+       start playing, and three only ever reads frames off it. */
+    media.v.setAttribute(
+      "style",
+      "position:fixed;left:-9999px;top:0;width:2px;height:2px;opacity:0;pointer-events:none"
+    );
+    document.body.appendChild(media.v);
+    return () => {
+      media.v.remove();
+      media.t.dispose();
+      media.v.pause();
+      media.v.removeAttribute("src");
+      media.v.load();
+    };
+  }, [media]);
+
+  return { map, media };
+}
+
+export default function Venue({ project, kind, position, facing, featured, onSelect, onHover, lite }) {
   const group = useRef();
   const screen = useRef();
   const ring = useRef();
   const halo = useRef();
 
   const accent = project.accent;
-  const tex = useTexture(project.shot);
   const { at: screenAt, size: screenSize } = SCREEN[kind];
   const sign = SIGN[kind];
-
-  const map = useMemo(() => {
-    const t = tex.clone();
-    t.colorSpace = THREE.SRGBColorSpace;
-    return cover(t, screenSize[0] / screenSize[1]);
-  }, [tex, screenSize]);
+  const { map, media } = useScreen(project, screenSize[0] / screenSize[1]);
 
   useFrame((state, delta) => {
     const dt = Math.min(delta, 0.05);
     const t = state.clock.elapsedTime;
+
+    /* Only the frontage you are level with plays, and nothing is fetched
+       until the first time one is. A phone never plays at all: the gain is
+       small on a screen that size and the cost in battery is not. */
+    if (media) {
+      const want = featured && !lite;
+      if (want && !media.v.getAttribute("src")) {
+        /* set through the attribute rather than the property: the compiler
+           treats anything held in state as read-only, and this is a method */
+        media.v.setAttribute("src", media.src);
+        media.v.load();
+      }
+      if (want && media.v.paused) {
+        /* a refused autoplay is not worth shouting about — the still is
+           already on the screen behind it */
+        media.v.play().catch(() => {});
+      } else if (!want && !media.v.paused) {
+        media.v.pause();
+      }
+      if (screen.current) {
+        const live = want && media.v.readyState >= 2 ? media.t : map;
+        if (screen.current.material.map !== live) {
+          screen.current.material.map = live;
+          screen.current.material.needsUpdate = true;
+        }
+      }
+    }
 
     if (screen.current) {
       screen.current.material.opacity = THREE.MathUtils.damp(
