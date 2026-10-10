@@ -40,6 +40,8 @@ export const readout = [
 export const projects = [
   {
     id: "compkit",
+    logo: "/logos/compkit.png",
+    venue: "casino",
     index: "01",
     code: "VOL_01",
     name: "CompKit Game Engine",
@@ -85,6 +87,8 @@ export const projects = [
   },
   {
     id: "truck-it",
+    logo: "/logos/truck-it.png",
+    venue: "depot",
     index: "02",
     code: "VOL_02",
     name: "Truck It Lets Park",
@@ -125,6 +129,8 @@ export const projects = [
   },
   {
     id: "pokellectr",
+    logo: "/logos/pokellectr.png",
+    venue: "shop",
     index: "03",
     code: "VOL_03",
     name: "Pokéllectr",
@@ -166,6 +172,8 @@ export const projects = [
   },
   {
     id: "clippd",
+    logo: "/logos/clippd.png",
+    venue: "cinema",
     index: "04",
     code: "VOL_04",
     name: "ClippD",

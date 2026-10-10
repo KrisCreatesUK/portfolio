@@ -56,13 +56,13 @@ export default function Stage({
       className="stage-canvas"
       dpr={[1, lite ? 1.35 : 1.75]}
       gl={{ antialias: !lite, powerPreference: "high-performance" }}
-      camera={{ position: [0, 48, 16], fov: 48, near: 0.1, far: 400 }}
+      camera={{ position: [0, 56, 20], fov: 48, near: 0.1, far: 600 }}
       onPointerMissed={() => onHover(null)}
     >
       <color attach="background" args={["#030404"]} />
       {/* The map is a hundred units across, so the haze has to start past the
           far monuments or the place reads as one lit object in a black room. */}
-      <fog attach="fog" args={["#030404", 60, 280]} />
+      <fog attach="fog" args={["#030404", 78, 340]} />
 
       {/* Lights that carry the whole map, not just the middle of it. The two
           directionals have no falloff, so they are what actually models the
@@ -71,8 +71,8 @@ export default function Stage({
       <hemisphereLight args={["#7fe04a", "#061008", 0.7]} />
       <directionalLight position={[26, 34, 22]} intensity={2.6} color="#e8ffdd" />
       <directionalLight position={[-30, 16, -20]} intensity={1.8} color="#6fd42a" />
-      <pointLight position={[0, 4, 0]} intensity={60} distance={40} color="#93F025" />
-      <pointLight position={[0, 16, 6]} intensity={40} distance={46} color="#57B41A" />
+      <pointLight position={[0, 4, 0]} intensity={80} distance={52} color="#93F025" />
+      <pointLight position={[0, 18, 6]} intensity={55} distance={60} color="#57B41A" />
 
       <Suspense fallback={null}>
         <World

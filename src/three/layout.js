@@ -1,7 +1,7 @@
 /* Shared geometry for the tower — kept out of the component files so fast
    refresh keeps working. */
 
-/* The array reads as a building now: one storey per project, glazed on all
+/* Head office: one storey per project, glazed on all
    four sides so there is always a lit window facing the camera however far
    round it has flown. */
 export const FLOOR_H = 2.75;     // storey height
@@ -34,7 +34,16 @@ export function rng(seed = 20260816) {
    flying round the ring and choosing a project are the same
    gesture.
 --------------------------------------------------------- */
-export const RING = 19;
+export const RING = 28;
 export const HQ_SCALE = 1.35;
-export const SHAPES = ["arcade", "pin", "card", "portal"];
 export const bearingOf = (index, total) => (index / total) * Math.PI * 2;
+
+/* Where a project's venue stands. The camera needs this as much as the
+   scene does: flying to a project means moving what the camera orbits. */
+export function venueAt(index, total, out) {
+  const b = bearingOf(index, total);
+  const x = Math.sin(b) * RING;
+  const z = Math.cos(b) * RING;
+  if (out) return out.set(x, 0, z);
+  return [x, 0, z];
+}

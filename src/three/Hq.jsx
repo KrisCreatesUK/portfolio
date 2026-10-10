@@ -3,28 +3,121 @@ import { useFrame } from "@react-three/fiber";
 import { RoundedBox, useTexture } from "@react-three/drei";
 import * as THREE from "three";
 
-import { labelTexture } from "./textures";
+import { cover, labelTexture } from "./textures";
+import { isTap } from "./gesture";
 import { FLOOR_H, TOWER_W, TOWER_D, floorY, towerTop } from "./layout";
 
 /* =========================================================
    HEADQUARTERS
    ---------------------------------------------------------
-   The landmark at the middle of the map. It used to hold the
-   projects, a storey each; they have moved out to monuments
-   of their own, so this is the brand now and nothing else —
-   a dark glazed slab with the name lit on the roof, standing
-   where everything else is arranged around it.
+   The landmark at the middle of the map, and the index to
+   everything on it: one storey per project, glazed on all
+   four sides so there is always a lit window facing you
+   however far round the camera has flown. Look in a window
+   and you see the product; press it and you are flown out
+   to that product's own place on the map.
 
-   It is deliberately not clickable. Nothing here opens.
+   The storeys above the projects are offices with the lights
+   half on. They are scenery, and they do not take clicks.
    ========================================================= */
 
 const shell = { color: "#0c1513", roughness: 0.42, metalness: 0.7 };
 const dark = { color: "#070d0c", roughness: 0.55, metalness: 0.5 };
 
-const FLOORS = 6;
+const SPARE_FLOORS = 3;
 const WIN_H = FLOOR_H - 1.05;
 
 /* windows that are lit, dim, or out — a building with people in it */
+/* A storey with a product in it: the same glazed box, but the window on
+   every face is that product's screen, and the whole floor takes the click. */
+function ProjectStorey({ y, project, featured, onSelect, onHover }) {
+  const tex = useTexture(project.shot);
+  const edges = useRef([]);
+  const screens = useRef([]);
+
+  const faces = facesOf();
+  const maps = useMemo(
+    () =>
+      faces.map((f) => {
+        const t = tex.clone();
+        t.colorSpace = THREE.SRGBColorSpace;
+        return cover(t, f.w / WIN_H);
+      }),
+    [tex, faces]
+  );
+
+  useFrame((state, delta) => {
+    const dt = Math.min(delta, 0.05);
+    const want = featured ? 1 : 0.42;
+    screens.current.forEach((m) => {
+      if (m) m.opacity = THREE.MathUtils.damp(m.opacity, want, 4, dt);
+    });
+    edges.current.forEach((m) => {
+      if (m) m.opacity = THREE.MathUtils.damp(m.opacity, featured ? 0.9 : 0.22, 4, dt);
+    });
+  });
+
+  return (
+    <group
+      position={[0, y, 0]}
+      onClick={(e) => {
+        if (!isTap()) return;
+        e.stopPropagation();
+        onSelect(project.id);
+      }}
+      onPointerOver={(e) => {
+        e.stopPropagation();
+        onHover(project.id);
+      }}
+      onPointerOut={() => onHover(null)}
+    >
+      <RoundedBox args={[TOWER_W, FLOOR_H - 0.08, TOWER_D]} radius={0.06} smoothness={3} castShadow>
+        <meshStandardMaterial {...shell} />
+      </RoundedBox>
+
+      {[-1, 1].map((s) => (
+        <mesh key={s} position={[0, (s * (FLOOR_H - 0.08)) / 2, 0]}>
+          <boxGeometry args={[TOWER_W + 0.22, 0.12, TOWER_D + 0.22]} />
+          <meshStandardMaterial {...dark} />
+        </mesh>
+      ))}
+
+      {faces.map((f, i) => (
+        <group key={f.key} position={f.pos} rotation={f.rot}>
+          <mesh>
+            <planeGeometry args={[f.w, WIN_H]} />
+            <meshBasicMaterial
+              ref={(m) => (screens.current[i] = m)}
+              map={maps[i]}
+              transparent
+              opacity={0.42}
+              toneMapped={false}
+            />
+          </mesh>
+          <lineSegments position={[0, 0, 0.01]} raycast={() => null}>
+            <edgesGeometry args={[new THREE.PlaneGeometry(f.w, WIN_H)]} />
+            <lineBasicMaterial
+              ref={(m) => (edges.current[i] = m)}
+              color={project.accent}
+              transparent
+              opacity={0.22}
+            />
+          </lineSegments>
+        </group>
+      ))}
+    </group>
+  );
+}
+
+function facesOf() {
+  return [
+    { key: "n", pos: [0, 0, TOWER_D / 2 + 0.02], rot: [0, 0, 0], w: TOWER_W - 0.5 },
+    { key: "s", pos: [0, 0, -TOWER_D / 2 - 0.02], rot: [0, Math.PI, 0], w: TOWER_W - 0.5 },
+    { key: "e", pos: [TOWER_W / 2 + 0.02, 0, 0], rot: [0, Math.PI / 2, 0], w: TOWER_D - 0.5 },
+    { key: "w", pos: [-TOWER_W / 2 - 0.02, 0, 0], rot: [0, -Math.PI / 2, 0], w: TOWER_D - 0.5 },
+  ];
+}
+
 function Storey({ y, seed }) {
   const panes = useMemo(() => {
     let a = (seed * 9301 + 49297) % 233280;
@@ -33,12 +126,7 @@ function Storey({ y, seed }) {
     return [0, 1, 2, 3].map(() => 0.18 + rnd() * 0.5);
   }, [seed]);
 
-  const faces = [
-    { pos: [0, 0, TOWER_D / 2 + 0.02], rot: [0, 0, 0], w: TOWER_W - 0.5 },
-    { pos: [0, 0, -TOWER_D / 2 - 0.02], rot: [0, Math.PI, 0], w: TOWER_W - 0.5 },
-    { pos: [TOWER_W / 2 + 0.02, 0, 0], rot: [0, Math.PI / 2, 0], w: TOWER_D - 0.5 },
-    { pos: [-TOWER_W / 2 - 0.02, 0, 0], rot: [0, -Math.PI / 2, 0], w: TOWER_D - 0.5 },
-  ];
+  const faces = facesOf();
 
   return (
     <group position={[0, y, 0]}>
@@ -54,7 +142,7 @@ function Storey({ y, seed }) {
       ))}
 
       {faces.map((f, i) => (
-        <group key={i} position={f.pos} rotation={f.rot}>
+        <group key={f.key} position={f.pos} rotation={f.rot}>
           <mesh>
             <planeGeometry args={[f.w, WIN_H]} />
             <meshBasicMaterial color="#9ad84a" transparent opacity={panes[i]} toneMapped={false} />
@@ -214,8 +302,9 @@ function Floodlights({ top, lite }) {
   );
 }
 
-export default function Hq({ lite }) {
-  const top = towerTop(FLOORS);
+export default function Hq({ lite, projects, featuredId, onSelect, onHover }) {
+  const floors = projects.length + SPARE_FLOORS;
+  const top = towerTop(floors);
 
   const capTex = useMemo(
     () =>
@@ -248,8 +337,21 @@ export default function Hq({ lite }) {
 
       <Floodlights top={top} lite={lite} />
 
-      {Array.from({ length: FLOORS }, (_, i) => (
-        <Storey key={i} y={floorY(i)} seed={i + 3} />
+      {/* the products, lowest volume at the bottom */}
+      {projects.map((p, i) => (
+        <ProjectStorey
+          key={p.id}
+          y={floorY(i)}
+          project={p}
+          featured={p.id === featuredId}
+          onSelect={onSelect}
+          onHover={onHover}
+        />
+      ))}
+
+      {/* offices above, with the lights half on */}
+      {Array.from({ length: SPARE_FLOORS }, (_, i) => (
+        <Storey key={`spare-${i}`} y={floorY(projects.length + i)} seed={i + 3} />
       ))}
 
       <group position={[0, top + 0.3, 0]}>

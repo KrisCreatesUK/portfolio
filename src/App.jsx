@@ -148,26 +148,59 @@ export default function App() {
 
   const mode = view.kind === "project" ? "project" : "space";
 
-  /* ---- navigation ---------------------------------------------------- */
+  /* what the way out is called, which is also what tells the header to show
+     it instead of the brand */
+  const backLabel = view.kind === "space" ? null : "Map";
+
+  /* ---- navigation ------------------------------------------------------
+     Everything here is one page, so without help the phone's back gesture
+     closes the site from inside a write-up rather than returning to the map.
+     Opening anything therefore pushes a history entry, and back pops it. */
   const openProject = useCallback((id) => {
     setActiveId(id);
     setView({ kind: "project", id });
     progress.current = 0;
     window.scrollTo(0, 0);
+    window.history.pushState({ view: "project", id }, "");
   }, []);
 
   const openPage = useCallback((id) => {
     setView({ kind: "page", id });
     window.scrollTo(0, 0);
+    window.history.pushState({ view: "page", id }, "");
   }, []);
 
+  /* Going home walks the history back rather than pushing a third entry, so
+     the stack never grows as you come and go from the map. */
   const toSpace = useCallback(() => {
+    if (window.history.state?.view) {
+      window.history.back();
+      return;
+    }
     setView({ kind: "space" });
     progress.current = 0;
     window.scrollTo(0, 0);
   }, []);
 
-  /* the array view is a place, not a document: it doesn't scroll */
+  useEffect(() => {
+    const onPop = (e) => {
+      const st = e.state;
+      if (st?.view === "project") {
+        setActiveId(st.id);
+        setView({ kind: "project", id: st.id });
+      } else if (st?.view === "page") {
+        setView({ kind: "page", id: st.id });
+      } else {
+        setView({ kind: "space" });
+      }
+      progress.current = 0;
+      window.scrollTo(0, 0);
+    };
+    window.addEventListener("popstate", onPop);
+    return () => window.removeEventListener("popstate", onPop);
+  }, []);
+
+  /* the map is a place, not a document: it doesn't scroll */
   useEffect(() => {
     document.body.classList.toggle("is-locked", view.kind === "space");
     return () => document.body.classList.remove("is-locked");
@@ -188,7 +221,7 @@ export default function App() {
     return () => window.removeEventListener("scroll", onScroll);
   }, [view]);
 
-  /* escape always takes you back out to the array */
+  /* escape always takes you back out to the map */
   useEffect(() => {
     const onKey = (e) => {
       if (e.key === "Escape" && view.kind !== "space") toSpace();
@@ -225,10 +258,10 @@ export default function App() {
         <div className="stage-vignette" aria-hidden="true" />
       </div>
 
-      <Header view={view} onHome={toSpace} onPage={openPage} />
+      <Header view={view} onHome={toSpace} onPage={openPage} backLabel={backLabel} />
 
       <main>
-        {/* ================= THE ARRAY ================= */}
+        {/* ================= THE MAP ================= */}
         <section className="space" id="top">
           <div className="space-copy">
             <p className="eyebrow">
@@ -259,7 +292,7 @@ export default function App() {
           </div>
 
           {/* Pinned to the edges, not stacked in a column: the middle of the
-              screen belongs to the array. */}
+              screen belongs to the map. */}
           <ul className="bay-list">
             {projects.map((p) => (
               <li key={p.id}>
@@ -307,7 +340,9 @@ export default function App() {
 
             <button className="showing-main" onClick={() => openProject(showing.id)}>
               <span className="showing-code">{showing.code}</span>
-              <span className="showing-name">{showing.name}</span>
+              {/* the product's own logo does the naming; the name stays in
+                  the markup for screen readers and for crawlers */}
+              <img className="showing-logo" src={showing.logo} alt={showing.name} />
               <span className="showing-kind">{showing.kind}</span>
               <span className="showing-go" aria-hidden="true">OPEN →</span>
             </button>
@@ -335,7 +370,7 @@ export default function App() {
           </div>
 
           <p className="space-hint">
-            <span className="dot" /> Fly the map — tap a monument to go in
+            <span className="dot" /> Fly the map — or tap a place to go in
           </p>
         </section>
 
@@ -365,7 +400,7 @@ export default function App() {
           >
             <nav className="deck-switch" aria-label="Back">
               <button className="deck-back" onClick={toSpace}>
-                <span aria-hidden="true">←</span> The array
+                <span aria-hidden="true">←</span> The map
               </button>
             </nav>
 
@@ -396,7 +431,7 @@ export default function App() {
 
             <footer className="deck-foot">
               <button className="btn" onClick={toSpace}>
-                <span aria-hidden="true">←</span> Back to the array
+                <span aria-hidden="true">←</span> Back to the map
               </button>
               <button className="btn btn-primary" onClick={() => openPage("contact")}>
                 Get in touch
@@ -414,7 +449,7 @@ export default function App() {
           >
             <nav className="deck-switch" aria-label="Back">
               <button className="deck-back" onClick={toSpace}>
-                <span aria-hidden="true">←</span> The array
+                <span aria-hidden="true">←</span> The map
               </button>
             </nav>
 
@@ -450,7 +485,7 @@ export default function App() {
 
             <footer className="deck-foot">
               <button className="btn" onClick={toSpace}>
-                <span aria-hidden="true">←</span> Back to the array
+                <span aria-hidden="true">←</span> Back to the map
               </button>
             </footer>
           </article>
@@ -475,7 +510,7 @@ export default function App() {
 
 /* ---------------------------------------------------- */
 
-function Header({ view, onHome, onPage }) {
+function Header({ view, onHome, onPage, backLabel }) {
   const [solid, setSolid] = useState(false);
 
   useEffect(() => {
@@ -487,17 +522,22 @@ function Header({ view, onHome, onPage }) {
 
   return (
     <header className={`site-head ${solid || view.kind !== "space" ? "is-solid" : ""}`}>
-      <button className="brand" onClick={onHome} aria-label="KrisCreates — the array">
-        <img className="brand-mark" src="/logo-mark.png" alt="" width="44" height="34" />
-        <span className="brand-name">
-          Kris<b>Creates</b>
-        </span>
-      </button>
+      {/* Inside a write-up the brand's slot is given over to a way out: on a
+          phone that is the only control reliably within thumb reach. */}
+      {backLabel ? (
+        <button className="backlink" onClick={onHome}>
+          <span aria-hidden="true">←</span> {backLabel}
+        </button>
+      ) : (
+        <button className="brand" onClick={onHome} aria-label="KrisCreates — the map">
+          <img className="brand-mark" src="/logo-mark.png" alt="" width="44" height="34" />
+          <span className="brand-name">
+            Kris<b>Creates</b>
+          </span>
+        </button>
+      )}
 
       <nav>
-        <button className={view.kind === "space" ? "is-on" : ""} onClick={onHome}>
-          Array
-        </button>
         <button
           className={view.kind === "page" && view.id === "stack" ? "is-on" : ""}
           onClick={() => onPage("stack")}

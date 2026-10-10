@@ -32,7 +32,7 @@ export default function ProjectView({ project, open, index, total, onClose, onJu
       {/* ---------- the switcher, stuck under the header ---------- */}
       <nav className="deck-switch" aria-label="Switch volume">
         <button className="deck-back" onClick={onClose}>
-          <span aria-hidden="true">←</span> The array
+          <span aria-hidden="true">←</span> The map
         </button>
         <div className="deck-tabs">
           {projects.map((p) => (
@@ -146,7 +146,7 @@ export default function ProjectView({ project, open, index, total, onClose, onJu
 
       <footer className="deck-foot">
         <button className="btn" onClick={onClose}>
-          <span aria-hidden="true">←</span> Back to the array
+          <span aria-hidden="true">←</span> Back to the map
         </button>
         <button className="btn btn-primary" onClick={onContact}>Start a conversation</button>
       </footer>

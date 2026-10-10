@@ -1,39 +1,46 @@
 import Hq from "./Hq";
-import Monument from "./Monument";
-import { HQ_SCALE, RING, SHAPES, bearingOf } from "./layout";
+import Venue from "./Venue";
+import { RING, bearingOf } from "./layout";
+import { HQ_SCALE } from "./layout";
 
 /* =========================================================
    THE MAP
    ---------------------------------------------------------
-   Head office in the middle, and the projects out on a ring
-   around it as monuments you fly between — so the page reads
-   as an open place with things standing in the distance,
-   rather than one object you rotate.
+   Head office in the middle, with a storey per project and
+   the product showing in the windows, and out on a ring
+   around it the place each product belongs in: a casino, a
+   services, a card shop, a cinema.
 
-   The ring is what the camera's heading is measured against:
-   whichever monument you are pointing at is the live one, so
-   flying round the map is the same gesture as choosing.
+   Both are ways in. Press a window and you are flown out to
+   that venue; fly to the venue yourself and you get there
+   the same way. The ring is what the camera's heading is
+   measured against, so flying round the map and choosing
+   are one gesture.
    ========================================================= */
 
 export default function World({ projects, featuredId, lite, onSelect, onHover }) {
   return (
     <group>
-      {/* Head office is a landmark now, seen from a ring road nineteen units
-          out, so it is built at landmark size rather than desk size. */}
       <group scale={HQ_SCALE}>
-        <Hq lite={lite} />
+        <Hq
+          lite={lite}
+          projects={projects}
+          featuredId={featuredId}
+          onSelect={onSelect}
+          onHover={onHover}
+        />
       </group>
 
       {projects.map((p, i) => {
         const a = bearingOf(i, projects.length);
         return (
-          <Monument
+          <Venue
             key={p.id}
             project={p}
-            kind={SHAPES[i % SHAPES.length]}
+            kind={p.venue}
             position={[Math.sin(a) * RING, 0, Math.cos(a) * RING]}
-            /* each turns its face outward, towards the ring the camera flies,
-               so arriving at one always arrives at a screen and not a flank */
+            /* each faces outward, towards the ring the camera flies, so
+               arriving at one arrives at a frontage and not a back wall */
             facing={a}
             featured={p.id === featuredId}
             onSelect={onSelect}
