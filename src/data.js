@@ -70,7 +70,7 @@ export const projects = [
       { label: "compkit.kriscreates.co.uk", href: "https://compkit.kriscreates.co.uk", primary: true },
       { label: "Play a live demo", href: "https://demos.kriscreates.co.uk/compkit/" },
     ],
-    accent: "#93F025",
+    accent: "#0091ff",   // the CompKit blue, not the site green
     shot: "/shots/hero-compkit.webp",
     shotFit: "landscape",
     images: [
