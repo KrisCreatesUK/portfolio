@@ -26,3 +26,15 @@ export function rng(seed = 20260816) {
     return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
   };
 }
+
+/* ---------------------------------------------------------
+   THE MAP
+   The projects stand on a ring around head office. The
+   camera's heading is measured against these bearings, so
+   flying round the ring and choosing a project are the same
+   gesture.
+--------------------------------------------------------- */
+export const RING = 19;
+export const HQ_SCALE = 1.35;
+export const SHAPES = ["arcade", "pin", "card", "portal"];
+export const bearingOf = (index, total) => (index / total) * Math.PI * 2;

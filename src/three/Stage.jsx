@@ -1,7 +1,7 @@
 import { Suspense, useEffect, useState } from "react";
 import { Canvas } from "@react-three/fiber";
 
-import Tower from "./Tower";
+import World from "./World";
 import Cyberspace from "./Cyberspace";
 import CameraRig from "./CameraRig";
 import Ship from "./Ship";
@@ -56,28 +56,26 @@ export default function Stage({
       className="stage-canvas"
       dpr={[1, lite ? 1.35 : 1.75]}
       gl={{ antialias: !lite, powerPreference: "high-performance" }}
-      camera={{ position: [-7.4, 9.2, 9.6], fov: 46, near: 0.1, far: 320 }}
+      camera={{ position: [0, 48, 16], fov: 48, near: 0.1, far: 400 }}
       onPointerMissed={() => onHover(null)}
     >
       <color attach="background" args={["#030404"]} />
-      <fog attach="fog" args={["#030404", 22, 125]} />
+      {/* The map is a hundred units across, so the haze has to start past the
+          far monuments or the place reads as one lit object in a black room. */}
+      <fog attach="fog" args={["#030404", 60, 280]} />
 
-      <ambientLight intensity={0.8} />
-      <directionalLight position={[6, 11, 7]} intensity={2.2} color="#e8ffdd" />
-      <directionalLight position={[-9, 5, -6]} intensity={1.4} color="#6fd42a" />
-      <spotLight
-        position={[-4, 9, 6]}
-        angle={0.7}
-        penumbra={0.8}
-        intensity={90}
-        distance={26}
-        color="#ffffff"
-      />
-      <pointLight position={[0, 1.6, 4.5]} intensity={9} distance={13} color="#93F025" />
-      <pointLight position={[3, 3.5, -3]} intensity={6} distance={14} color="#57B41A" />
+      {/* Lights that carry the whole map, not just the middle of it. The two
+          directionals have no falloff, so they are what actually models the
+          monuments out on the ring; the point lights only warm head office. */}
+      <ambientLight intensity={1.15} />
+      <hemisphereLight args={["#7fe04a", "#061008", 0.7]} />
+      <directionalLight position={[26, 34, 22]} intensity={2.6} color="#e8ffdd" />
+      <directionalLight position={[-30, 16, -20]} intensity={1.8} color="#6fd42a" />
+      <pointLight position={[0, 4, 0]} intensity={60} distance={40} color="#93F025" />
+      <pointLight position={[0, 16, 6]} intensity={40} distance={46} color="#57B41A" />
 
       <Suspense fallback={null}>
-        <Tower
+        <World
           projects={projects}
           featuredId={featuredId}
           lite={lite}

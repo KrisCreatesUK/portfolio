@@ -3,6 +3,7 @@ import { Component, Suspense, lazy, useCallback, useEffect, useRef, useState } f
 import Counter from "./components/Counter";
 import ProjectView from "./components/ProjectView";
 import { profile, projects, capability, links } from "./data";
+import { input } from "./three/flight";
 import "./styles.css";
 
 const Stage = lazy(() => import("./three/Stage"));
@@ -16,6 +17,75 @@ class StageBoundary extends Component {
   render() {
     return this.state.failed ? null : this.props.children;
   }
+}
+
+/* =========================================================
+   THE FLIGHT PAD
+   ---------------------------------------------------------
+   Four arrows you hold. They write into the same channel the
+   camera rig already reads each frame, so holding a button
+   and dragging are the same thing as far as the map is
+   concerned — and the keyboard arrows do it too, which makes
+   the whole map reachable without a pointer at all.
+   ========================================================= */
+function FlightPad() {
+  const set = (axis, value) => () => {
+    input[axis] = value;
+  };
+  const clear = () => {
+    input.turn = 0;
+    input.climb = 0;
+  };
+
+  useEffect(() => {
+    const KEYS = {
+      ArrowLeft: ["turn", -1],
+      ArrowRight: ["turn", 1],
+      ArrowUp: ["climb", 1],
+      ArrowDown: ["climb", -1],
+    };
+    const down = (e) => {
+      const k = KEYS[e.key];
+      if (!k) return;
+      e.preventDefault();
+      input[k[0]] = k[1];
+    };
+    const up = (e) => {
+      const k = KEYS[e.key];
+      if (k) input[k[0]] = 0;
+    };
+    window.addEventListener("keydown", down);
+    window.addEventListener("keyup", up);
+    return () => {
+      window.removeEventListener("keydown", down);
+      window.removeEventListener("keyup", up);
+      input.turn = 0;
+      input.climb = 0;
+    };
+  }, []);
+
+  const pad = (label, axis, value, glyph) => (
+    <button
+      className={`pad-key pad-${label}`}
+      aria-label={label}
+      onPointerDown={set(axis, value)}
+      onPointerUp={clear}
+      onPointerLeave={clear}
+      onPointerCancel={clear}
+      onBlur={clear}
+    >
+      <span aria-hidden="true">{glyph}</span>
+    </button>
+  );
+
+  return (
+    <div className="pad" aria-label="Fly the map">
+      {pad("up", "climb", 1, "▲")}
+      {pad("left", "turn", -1, "◀")}
+      {pad("right", "turn", 1, "▶")}
+      {pad("down", "climb", -1, "▼")}
+    </div>
+  );
 }
 
 /* =========================================================
@@ -221,8 +291,9 @@ export default function App() {
           </ul>
 
           <Counter />
+          <FlightPad />
 
-          {/* Whatever storey the tour is level with, this is it — one target,
+          {/* Whatever monument you are pointing at, this is it — one target,
               always the same size, always in the same place. Nothing to hunt
               for on a phone. */}
           <div className="showing" style={{ "--accent": showing.accent }}>
@@ -264,7 +335,7 @@ export default function App() {
           </div>
 
           <p className="space-hint">
-            <span className="dot" /> Drag to fly the building — tap a lit window to go in
+            <span className="dot" /> Fly the map — tap a monument to go in
           </p>
         </section>
 

@@ -379,7 +379,7 @@ main { position: relative; z-index: 10; }
   grid-template-rows: auto minmax(0, 1fr) auto;
   grid-template-areas:
     "copy  bays"
-    ".     bays"
+    ".     pad"
     "show  show"
     "stats hint";
   gap: 14px clamp(18px, 3vw, 44px);
@@ -457,6 +457,43 @@ main { position: relative; z-index: 10; }
   background: var(--acc);
   animation: pulse 2.4s infinite;
 }
+
+/* ---------------------------------------------------------
+   THE FLIGHT PAD
+--------------------------------------------------------- */
+.pad {
+  grid-area: pad;
+  align-self: end;
+  justify-self: end;
+  display: grid;
+  grid-template-columns: repeat(3, 42px);
+  grid-template-rows: repeat(2, 42px);
+  grid-template-areas:
+    ".    up    ."
+    "left down right";
+  gap: 6px;
+}
+
+.pad-key {
+  display: grid;
+  place-items: center;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: rgba(6, 10, 10, 0.82);
+  backdrop-filter: blur(10px);
+  color: var(--soft);
+  font-size: 12px;
+  cursor: pointer;
+  transition: border-color 0.15s, color 0.15s, background 0.15s, transform 0.08s;
+}
+
+.pad-key:hover { border-color: var(--acc); color: var(--acc); }
+.pad-key:active { background: rgba(147, 240, 37, 0.16); transform: scale(0.94); }
+
+.pad-up { grid-area: up; }
+.pad-down { grid-area: down; }
+.pad-left { grid-area: left; }
+.pad-right { grid-area: right; }
 
 /* ---------------------------------------------------------
    NOW SHOWING — the storey the tour is level with
@@ -1203,7 +1240,7 @@ main { position: relative; z-index: 10; }
     grid-template-rows: auto minmax(0, 1fr) auto;
     grid-template-areas:
       "copy"
-      "."
+      "pad"
       "show";
     gap: 10px;
     padding: calc(var(--head-h) + 8px) var(--pad) 18px;
@@ -1217,6 +1254,9 @@ main { position: relative; z-index: 10; }
   .bay-list,
   .counter,
   .space-hint { display: none; }
+
+  /* the pad goes low and to the right, where a thumb already is */
+  .pad { align-self: end; margin-bottom: 6px; }
 
   /* on a phone this is the whole interface, so it gets the full width and
      the name gets a line of its own */

@@ -11,6 +11,10 @@
    frame loops, never during a render.
    ========================================================= */
 
+/* What the on-screen arrows are asking for, -1 to 1 on each axis. The HUD
+   writes it while a key or a button is held; the rig reads it every frame. */
+export const input = { turn: 0, climb: 0 };
+
 export const flight = {
   az: -0.62,       // where round the building we are
   height: 0,       // how far up
