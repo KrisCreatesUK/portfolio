@@ -53,8 +53,12 @@ const EYE_MAX = 30;
    way onto a building threw the craft out of shot and left you watching
    scenery. So it is capped — and the cap is smaller on a phone, which has
    far less width to spend before the craft is off the edge of it. */
-const GLANCE = 52;            // from this far out it starts turning its head
-const LEVEL = 8;              // and from this close the turn is at full
+const GLANCE = 74;            // from this far out it starts turning its head
+/* Full by the time you are where the camera pulls up, not by the time you
+   are level with the place: level, it is square on your side and the cap
+   cannot reach it anyway, so a ramp that peaked there peaked too late to
+   be any use. */
+const LEVEL = 40;
 const BEHIND = 26;            // then it straightens up again over this much
 
 /* How far the camera will crane to look at a frontage. A phone needs far
@@ -62,7 +66,7 @@ const BEHIND = 26;            // then it straightens up again over this much
    the building on screen at all, so going past one looked like going past
    nothing. It costs the craft the middle of the frame for a second or two,
    which is the right trade — that second is the whole point of the street. */
-const GLANCE_WIDE = 0.62;
+const GLANCE_WIDE = 0.8;
 const GLANCE_NARROW = 0.92;
 
 /* And the lens itself opens up when the screen is tall and thin. */
@@ -83,6 +87,7 @@ const LOOK_MAX = 1.15;        // how far you can crane round, in radians
 const ARROW_LOOK = 1.1;
 const RESUME_AFTER = 3.4;
 
+const APPROACH = 32;          // where it pulls up when you pick one
 const PARK_BACK = 15;         // where it stops relative to a frontage
 
 /* =========================================================
@@ -273,7 +278,12 @@ export default function CameraRig({
   useEffect(() => {
     if (pickIndex == null || mode !== "space") return;
     const s = state.current;
-    s.flyTo = venueS(pickIndex);
+    /* Stop short of it, not level with it. Level, a frontage is square on
+       your left or right - ninety degrees - and the camera is only allowed
+       to crane a third of that, so pulling up outside one actually left it
+       off the edge of the screen. From a little way back it sits where the
+       camera can look straight at it. */
+    s.flyTo = venueS(pickIndex) - APPROACH;
     s.idle = 0;
     s.intro = null;
   }, [pickIndex, mode]);

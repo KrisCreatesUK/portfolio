@@ -38,7 +38,9 @@ export const VENUE_SCALE = 1.25;
 
 /* where the product's screen hangs on each building, and how big */
 const SCREEN = {
-  casino: { at: [0, 7.4, 3.25], size: [7.4, 4.2] },
+  /* a board over the roof rather than a panel on the wall: three games
+     at once need the width, and a casino would put it up there anyway */
+  casino: { at: [0, 14.6, 1.7], size: [12.8, 7.2] },
   depot: { at: [0, 5.1, -1.05], size: [6.4, 3.6] },
   shop: { at: [0, 3.15, 2.76], size: [4.6, 2.9] },
   cinema: { at: [0, 8.8, 3.08], size: [6.8, 4.3] },
@@ -46,7 +48,8 @@ const SCREEN = {
 
 /* and where the logo sign goes */
 const SIGN = {
-  casino: { at: [0, 12.4, 2.1], size: [6.6, 2.1] },
+  /* which puts the name down on the canopy, where a marquee goes */
+  casino: { at: [0, 4.4, 6.08], size: [7.4, 1.9] },
   depot: { at: [-6.6, 8.4, 0], size: [4.4, 2.8], turn: 0 },
   shop: { at: [0, 6.3, 2.3], size: [5, 1.6] },
   cinema: { at: [-4.3, 10.2, 2.85], size: [2.5, 6.4] },
@@ -307,8 +310,8 @@ export default function Venue({ project, kind, position, facing, featured, onSel
       onPointerOut={() => onHover(null)}
     >
       {/* one slab takes every tap, so no small part has to be hit */}
-      <mesh position={[0, 6, 1]} visible={false}>
-        <boxGeometry args={[15, 15, 11]} />
+      <mesh position={[0, 9, 1]} visible={false}>
+        <boxGeometry args={[16, 24, 11]} />
         <meshBasicMaterial />
       </mesh>
 
@@ -422,16 +425,30 @@ function Casino({ accent }) {
         <meshBasicMaterial color={accent} transparent opacity={0.18} toneMapped={false} />
       </mesh>
 
-      {/* bulbs along the facade and up the sign tower */}
+      {/* bulbs along the facade, and up both sides of the board */}
       <Bulbs count={16} from={[-5.6, 5.1, 3.3]} to={[5.6, 5.1, 3.3]} colour={accent} />
-      <Bulbs count={8} from={[-3.2, 11, 2.2]} to={[-3.2, 13.6, 2.2]} colour={accent} speed={1.1} />
-      <Bulbs count={8} from={[3.2, 11, 2.2]} to={[3.2, 13.6, 2.2]} colour={accent} speed={1.1} />
+      <Bulbs count={9} from={[-6.7, 11.4, 1.9]} to={[-6.7, 17.8, 1.9]} colour={accent} speed={1.1} />
+      <Bulbs count={9} from={[6.7, 11.4, 1.9]} to={[6.7, 17.8, 1.9]} colour={accent} speed={1.1} />
 
-      {/* the mast the sign hangs on */}
-      <mesh position={[0, 12.4, 1.8]}>
-        <boxGeometry args={[7.2, 2.8, 0.3]} />
+      {/* the gantry the board is bolted to: a backing panel, a frame round
+          it and two legs down onto the parapet */}
+      <mesh position={[0, 14.6, 1.3]}>
+        <boxGeometry args={[13.6, 8, 0.6]} />
         <meshStandardMaterial {...dark} />
       </mesh>
+      <mesh position={[0, 14.6, 1.62]}>
+        <boxGeometry args={[13.2, 7.6, 0.1]} />
+        <meshStandardMaterial color="#05090a" roughness={0.4} metalness={0.5} />
+      </mesh>
+      {[-1, 1].map((side) => (
+        <mesh key={side} position={[side * 6.5, 12.4, 1.1]}>
+          <boxGeometry args={[0.5, 5.4, 0.5]} />
+          <meshStandardMaterial {...pale} />
+        </mesh>
+      ))}
+
+      {/* the board throws its own light down over the roof */}
+      <pointLight position={[0, 13.5, 5]} color={accent} intensity={26} distance={24} />
     </group>
   );
 }
