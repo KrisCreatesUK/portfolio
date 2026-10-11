@@ -112,6 +112,31 @@ export function venueAt(index, total, out) {
   return [v[0], 0, v[1]];
 }
 
+/* =========================================================
+   HEAD OFFICE
+   ---------------------------------------------------------
+   It used to stand in the middle of the block, which made it
+   the one thing on the map you could never pull up outside
+   of: from the road it is square on your side and a long way
+   off, and the camera is not allowed to crane that far.
+
+   So it is a frontage like the rest, on the inside of the
+   first side, placed so that going round the block it is the
+   last thing you pass before coming back to CompKit.
+   ========================================================= */
+export const HQ_S = 18;
+
+export function hqAt(out) {
+  const u = HQ_S - ROAD;
+  const x = u;
+  const z = ROAD - SETBACK;
+  if (out) return out.set(x, 0, z);
+  return [x, 0, z];
+}
+
+/* facing the road, which on this side is the way the camera is going */
+export const HQ_FACING = 0;
+
 /* Turned to face the traffic going past it. */
 export function venueFacing(index) {
   const leg = index % 4;

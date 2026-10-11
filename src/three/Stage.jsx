@@ -71,8 +71,8 @@ export default function Stage({
       <hemisphereLight args={["#7fe04a", "#071209", 1.1]} />
       <directionalLight position={[26, 34, 22]} intensity={3.1} color="#e8ffdd" />
       <directionalLight position={[-30, 16, -20]} intensity={2.2} color="#6fd42a" />
-      <pointLight position={[0, 5, 0]} intensity={110} distance={64} color="#93F025" />
-      <pointLight position={[0, 20, 6]} intensity={70} distance={72} color="#57B41A" />
+      {/* no light at the centre of the map any more: there is nothing
+          there to light. Head office carries its own. */}
 
       <Suspense fallback={null}>
         <World

@@ -7,8 +7,10 @@ import { flight, input } from "./flight";
 import {
   CRAFT_AHEAD,
   CRAFT_HOVER,
+  HQ_S,
   PERIM,
   cornerAt,
+  hqAt,
   roadAt,
   venueAt,
   venueS,
@@ -73,16 +75,10 @@ const GLANCE_NARROW = 0.92;
 const FOV_WIDE = 55;
 const FOV_NARROW = 68;
 
-/* Head office gets the view entirely while you are still parked outside the
-   front door, and none of it once you pull away: any standing lean towards
-   the middle of the block turns the camera off the road, and the craft ends
-   up pinned to one side of the screen instead of out in front of you. */
-const INWARD = 0;
-
-/* You start outside the front door looking up at it, and pull away onto the
-   road once you touch something or after a few seconds of standing there —
-   because head office is where the whole thing starts from. */
-const HOLD = 4.5;
+/* Head office is a frontage on the street now rather than the thing in the
+   middle, so there is no standing lean towards the block and no opening hold
+   on the tower. You land already coming up on the first project, and the
+   tower is something you pass — last, on the way back round. */
 const LOOK_MAX = 1.15;        // how far you can crane round, in radians
 const ARROW_LOOK = 1.1;
 const RESUME_AFTER = 3.4;
@@ -141,8 +137,9 @@ const _road = new THREE.Vector3();
 const _want = new THREE.Vector3();
 const _craft = new THREE.Vector3();
 const _end = new THREE.Vector3();
+const _tower = new THREE.Vector3();
 const _base = new THREE.Vector3();
-const _hq = new THREE.Vector3(0, 15, 0);
+const _stop = new THREE.Vector3();
 
 export default function CameraRig({
   mode,
@@ -157,9 +154,9 @@ export default function CameraRig({
   const { camera, gl } = useThree();
 
   const state = useRef({
-    /* a short way back down the road from the first frontage, which is both
-       what the bar should be showing and where the tower reads best */
-    s: venueS(0) - 62,
+    /* exactly where the camera pulls up for the first frontage, so the
+       tour opens on CompKit rather than on anything else */
+    s: venueS(0) - APPROACH,
     speed: 0,
     flyTo: null,                // a distance it is driving itself to
     look: 0,                    // how far the head is turned, radians
@@ -176,7 +173,6 @@ export default function CameraRig({
     vFwd: 0,
     vLook: 0,
     pointerId: null,
-    hq: 1,                      // 1 while still looking up at head office
     glance: 0,                  // how far the head is turned to a frontage
     featured: -1,
   });
@@ -331,9 +327,12 @@ export default function CameraRig({
          watched a craft circling nothing in particular. */
       const spin =
         clamp((p - DIVE) / 0.09, 0, 1) * clamp((WIND + 0.1 - p) / 0.13, 0, 1);
-      const out = Math.hypot(_craft.x, _craft.z) || 1;
-      const ox = (_craft.x / out) * 10 * spin;
-      const oz = (_craft.z / out) * 10 * spin;
+      hqAt(_tower);
+      const rx = _craft.x - _tower.x;
+      const rz = _craft.z - _tower.z;
+      const out = Math.hypot(rx, rz) || 1;
+      const ox = (rx / out) * 10 * spin;
+      const oz = (rz / out) * 10 * spin;
 
       camera.position.set(
         _craft.x - _dir.x * back + ox,
@@ -348,7 +347,11 @@ export default function CameraRig({
          the turn the craft is well above the roof, and following its own
          altitude pointed the camera at empty sky over the top of it */
       const w = 0.78 * spin;
-      camera.lookAt(tx + (0 - tx) * w, ty + (TOWER_MID - ty) * w, tz + (0 - tz) * w);
+      camera.lookAt(
+        tx + (_tower.x - tx) * w,
+        ty + (TOWER_MID - ty) * w,
+        tz + (_tower.z - tz) * w
+      );
 
       /* hand the craft the seat the rig has flown it to */
       flight.intro = p;
@@ -457,36 +460,51 @@ export default function CameraRig({
        looking just past it keeps it in shot and the bend anticipated. */
     roadAt(st.s + CRAFT_AHEAD + 9, CRAFT_HOVER + 1.4, _road);
 
-    /* Leaning into the block while you are still outside the front door,
-       all the way onto it for the first few seconds before you pull away. */
-    if (st.dragging || st.speed || st.flyTo != null || st.idle > HOLD) {
-      st.hq = damp(st.hq, 0, 1.1, dt);
-    }
-    if (mode === "project") st.hq = 0;
-    _base.lerpVectors(_road, _hq, INWARD + (0.92 - INWARD) * st.hq);
+    /* and nothing leans it off that: what the camera follows is the craft,
+       and the only thing that turns its head is going past a frontage */
+    _base.copy(_road);
 
-    /* and the glance: going past a frontage the head turns towards it and
-       back again — as far as it is allowed to, and no further */
-    venueAt(st.featured, total, _venue);
-    _venue.y = 7;
+    /* Which frontage the head is turned towards — the projects and head
+       office alike, because on the street it is another building you go
+       past. Only the projects are ever named in the bar; this is just
+       where the camera is looking. */
+    let look = venueS(st.featured);
+    let lookAt = st.featured;
+    if (mode !== "project") {
+      const score = (d) => (d >= 0 ? d : -d * 2.2);
+      if (score(shortest(st.s, HQ_S)) < score(shortest(st.s, look))) {
+        look = HQ_S;
+        lookAt = -1;
+      }
+    }
+
     /* Builds as you come up on it and falls away once it is behind you,
        rather than being symmetrical: nobody cranes back over their shoulder
        at a shop they have already gone past. */
-    const gap = shortest(st.s, venueS(st.featured));
+    const gap = shortest(st.s, look);
     const g =
       gap >= 0
         ? clamp((GLANCE - gap) / (GLANCE - LEVEL), 0, 1)
         : clamp(1 + gap / BEHIND, 0, 1);
     const glance = g * g * (3 - 2 * g);
 
+    /* and where that frontage actually stands */
+    if (lookAt < 0) {
+      hqAt(_stop);
+      _stop.y = 15;             // halfway up it, not at its feet
+    } else {
+      venueAt(lookAt, total, _stop);
+      _stop.y = 7;
+    }
+
     if (mode === "project") {
       /* a write-up is the one time the building really is the subject */
-      _want.copy(_venue);
+      _want.copy(_stop);
       st.glance = 0;
     } else {
       _want.copy(_base);
       const cap = wide ? GLANCE_WIDE : GLANCE_NARROW;
-      const toVenue = Math.atan2(_venue.x - _here.x, _venue.z - _here.z);
+      const toVenue = Math.atan2(_stop.x - _here.x, _stop.z - _here.z);
       const toBase = Math.atan2(_want.x - _here.x, _want.z - _here.z);
       let swing = toVenue - toBase;
       while (swing > Math.PI) swing -= Math.PI * 2;
@@ -526,9 +544,13 @@ const UP = new THREE.Vector3(0, 1, 0);
    what makes the hand-off invisible. */
 function arrivalAt(p, s0, out) {
   roadAt(s0 + CRAFT_AHEAD, CRAFT_HOVER, _end);
-  /* finish the circling pointed the same way as the road, so peeling off is
-     one clean run outwards and not a hook back on itself */
-  const aOut = Math.atan2(_end.x, _end.z);
+  hqAt(_tower);
+  /* everything below is measured from the tower, wherever it stands */
+  const dx = _end.x - _tower.x;
+  const dz = _end.z - _tower.z;
+  /* finish the circling pointed the same way as the run out, so peeling off
+     is one clean line and not a hook back on itself */
+  const aOut = Math.atan2(dx, dz);
   const aTop = aOut - TURNS * Math.PI * 2;
 
   if (p < DIVE) {
@@ -536,9 +558,9 @@ function arrivalAt(p, s0, out) {
     const e = k * k;                            // falling, and getting faster
     const r = FROM.r + (SPIRAL_R - FROM.r) * e;
     return out.set(
-      Math.sin(aTop) * r,
+      _tower.x + Math.sin(aTop) * r,
       FROM.y + (SPIRAL_TOP - FROM.y) * e,
-      Math.cos(aTop) * r
+      _tower.z + Math.cos(aTop) * r
     );
   }
 
@@ -547,16 +569,20 @@ function arrivalAt(p, s0, out) {
     const e = k < 0.5 ? 2 * k * k : 1 - Math.pow(-2 * k + 2, 2) / 2;
     const a = aTop + TURNS * Math.PI * 2 * e;
     const y = SPIRAL_TOP + (SPIRAL_BOTTOM - SPIRAL_TOP) * e;
-    return out.set(Math.sin(a) * SPIRAL_R, y, Math.cos(a) * SPIRAL_R);
+    return out.set(
+      _tower.x + Math.sin(a) * SPIRAL_R,
+      y,
+      _tower.z + Math.cos(a) * SPIRAL_R
+    );
   }
 
   /* peeling off: a curve that leaves along the way it was already going */
   const k = (p - WIND) / (1 - WIND);
   const e = k * (2 - k);
-  const px = Math.sin(aOut) * SPIRAL_R;
-  const pz = Math.cos(aOut) * SPIRAL_R;
-  const cx = px + Math.cos(aOut) * 46;
-  const cz = pz - Math.sin(aOut) * 46;
+  const px = _tower.x + Math.sin(aOut) * SPIRAL_R;
+  const pz = _tower.z + Math.cos(aOut) * SPIRAL_R;
+  const cx = px + Math.cos(aOut) * 42;
+  const cz = pz - Math.sin(aOut) * 42;
   const u = 1 - e;
   return out.set(
     u * u * px + 2 * u * e * cx + e * e * _end.x,

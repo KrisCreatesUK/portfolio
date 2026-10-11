@@ -1,7 +1,7 @@
 import Hq from "./Hq";
 import Venue from "./Venue";
 import Streets from "./Streets";
-import { HQ_SCALE, venueAt, venueFacing } from "./layout";
+import { HQ_FACING, HQ_SCALE, hqAt, venueAt, venueFacing } from "./layout";
 
 /* =========================================================
    THE MAP
@@ -22,7 +22,9 @@ export default function World({ projects, featuredId, lite, onSelect, onHover })
     <group>
       <Streets />
 
-      <group scale={HQ_SCALE}>
+      {/* on its own plot now rather than in the middle of the block, so
+          the tour drives past it like everything else */}
+      <group position={hqAt()} rotation={[0, HQ_FACING, 0]} scale={HQ_SCALE}>
         <Hq
           lite={lite}
           projects={projects}
@@ -30,6 +32,10 @@ export default function World({ projects, featuredId, lite, onSelect, onHover })
           onSelect={onSelect}
           onHover={onHover}
         />
+        {/* the light that used to sit at the centre of the map travels with
+            the building, because the building is what it was ever for */}
+        <pointLight position={[0, 4, 0]} intensity={70} distance={42} color="#93F025" />
+        <pointLight position={[0, 15, 5]} intensity={48} distance={48} color="#57B41A" />
       </group>
 
       {projects.map((p, i) => (
