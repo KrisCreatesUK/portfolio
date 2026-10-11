@@ -199,7 +199,7 @@ function useScreen(project, aspect) {
     v.preload = "none";
     const t = new THREE.VideoTexture(v);
     t.colorSpace = THREE.SRGBColorSpace;
-    return { v, t, src: project.clip };
+    return { v, t, src: project.clip, srcSm: project.clipSm ?? project.clip };
   });
 
   useEffect(() => {
@@ -238,15 +238,18 @@ export default function Venue({ project, kind, position, facing, featured, onSel
     const dt = Math.min(delta, 0.05);
     const t = state.clock.elapsedTime;
 
-    /* Only the frontage you are level with plays, and nothing is fetched
-       until the first time one is. A phone never plays at all: the gain is
-       small on a screen that size and the cost in battery is not. */
+    /* One frontage plays: the one you are coming up on, and nothing is
+       fetched until the first time you come up on it. A phone plays too,
+       off a smaller cut of the same clip — one video at a time at two
+       thirds the width is a cost a handset can carry, and the alternative
+       was a street of frozen screens. */
     if (media) {
-      const want = featured && !lite;
-      if (want && !media.v.getAttribute("src")) {
+      const want = featured;
+      const src = lite ? media.srcSm : media.src;
+      if (want && media.v.getAttribute("src") !== src) {
         /* set through the attribute rather than the property: the compiler
            treats anything held in state as read-only, and this is a method */
-        media.v.setAttribute("src", media.src);
+        media.v.setAttribute("src", src);
         media.v.load();
       }
       if (want && media.v.paused) {
