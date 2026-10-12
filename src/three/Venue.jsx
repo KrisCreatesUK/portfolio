@@ -42,10 +42,12 @@ const SCREEN = {
      at once need the width, and a casino would put it up there anyway */
   casino: { at: [0, 14.6, 1.7], size: [12.8, 7.2] },
   depot: { at: [0, 5.1, -1.05], size: [6.4, 3.6] },
-  /* Over the shop rather than in its window. In the window it was a
-     postcard at street distance, and a dark one — which is why the card
-     shop has read as a building with its lights off. */
-  shop: { at: [0, 11.6, 1.88], size: [11.4, 6.4] },
+  /* Pokellectr is a phone, so the moving picture is on a phone: a display
+     unit out on the forecourt at the height of the shop, running one of the
+     cuts. The board over the roof carries the store listing instead, and the
+     windows have the app in them — three things saying the same thing in the
+     three ways anyone meets it. */
+  shop: { at: [5.4, 6.9, 4.78], size: [3.9, 6.93] },
   cinema: { at: [0, 8.8, 3.08], size: [6.8, 4.3] },
 };
 
@@ -391,6 +393,8 @@ export default function Venue({ project, kind, position, facing, featured, onSel
    door with bulbs running round it.
    ========================================================= */
 function Casino({ accent }) {
+  const plugs = useTexture("/badges/for-wordpress.webp");
+
   return (
     <group>
       <RoundedBox args={[12, 9, 6.4]} radius={0.12} smoothness={3} position={[0, 4.5, 0]} castShadow>
@@ -428,6 +432,12 @@ function Casino({ accent }) {
           <meshStandardMaterial {...pale} />
         </mesh>
       ))}
+
+      {/* what it plugs into, over the door where you cannot miss it */}
+      <mesh position={[0, 6.4, 3.24]}>
+        <planeGeometry args={[7.4, 1.49]} />
+        <meshBasicMaterial map={plugs} transparent toneMapped={false} />
+      </mesh>
 
       {/* the doorway, glowing */}
       <mesh position={[0, 2, 3.24]}>
@@ -554,6 +564,13 @@ function Depot({ accent }) {
    you can see the stock through.
    ========================================================= */
 function Shop({ accent }) {
+  const [store, win1, win2, play] = useTexture([
+    "/shots/pokellectr-store.webp",
+    "/shots/pokellectr-win1.webp",
+    "/shots/pokellectr-win2.webp",
+    "/badges/on-google-play.webp",
+  ]);
+
   return (
     <group>
       <RoundedBox args={[8, 5, 5.4]} radius={0.1} smoothness={3} position={[0, 2.8, 0]} castShadow>
@@ -578,20 +595,64 @@ function Shop({ accent }) {
         </mesh>
       ))}
 
-      {/* the window, lit from inside with stock standing up in it */}
+      {/* the window: lit, with the app itself standing up in it */}
       <mesh position={[0, 3.15, 2.72]}>
         <planeGeometry args={[5.4, 3.4]} />
-        <meshBasicMaterial color={accent} transparent opacity={0.22} toneMapped={false} />
+        <meshBasicMaterial color={accent} transparent opacity={0.16} toneMapped={false} />
       </mesh>
-      {[-1.9, -0.95, 0, 0.95, 1.9].map((x, i) => (
-        <mesh key={x} position={[x, 3.1 + (i % 2) * 0.22, 2.74]} rotation={[0, 0, (i - 2) * 0.05]}>
-          <planeGeometry args={[0.72, 1.05]} />
-          <meshBasicMaterial color={accent} transparent opacity={0.6} toneMapped={false} />
-        </mesh>
+      {[[-1.35, win1], [1.35, win2]].map(([x, tex], i) => (
+        <group key={x} position={[x, 3.15, 2.76]} rotation={[0, 0, i ? -0.03 : 0.03]}>
+          <mesh>
+            <planeGeometry args={[1.5, 2.7]} />
+            <meshBasicMaterial map={tex} toneMapped={false} />
+          </mesh>
+          <lineSegments position={[0, 0, 0.01]} raycast={() => null}>
+            <edgesGeometry args={[new THREE.PlaneGeometry(1.5, 2.7)]} />
+            <lineBasicMaterial color={accent} transparent opacity={0.6} />
+          </lineSegments>
+        </group>
       ))}
       <mesh position={[3.1, 1.6, 2.73]}>
         <planeGeometry args={[1.3, 3.1]} />
         <meshBasicMaterial color={accent} transparent opacity={0.22} toneMapped={false} />
+      </mesh>
+
+      {/* The display unit. Flat on purpose: a backing panel well behind the
+          screen and a frame of four thin bars around it, rather than a solid
+          body the screen has to sit proud of. An earlier version put the
+          screen a fraction in front of a rounded box and it came out dead
+          black every time. */}
+      <group position={[5.4, 0, 4.4]}>
+        <mesh position={[0, 0.14, 0]}>
+          <cylinderGeometry args={[1.6, 1.8, 0.28, 20]} />
+          <meshStandardMaterial {...dark} />
+        </mesh>
+        <mesh position={[0, 1.6, 0]} castShadow>
+          <cylinderGeometry args={[0.36, 0.5, 3.2, 12]} />
+          <meshStandardMaterial {...pale} />
+        </mesh>
+        <mesh position={[0, 6.9, 0]}>
+          <planeGeometry args={[4.6, 7.7]} />
+          <meshBasicMaterial color="#05090a" />
+        </mesh>
+        {[
+          [0, 3.63, 4.6, 0.3],
+          [0, 10.17, 4.6, 0.3],
+          [-2.15, 6.9, 0.3, 7.1],
+          [2.15, 6.9, 0.3, 7.1],
+        ].map(([x, y, w, h]) => (
+          <mesh key={`${x}:${y}`} position={[x, y, 0.38]}>
+            <boxGeometry args={[w, h, 0.26]} />
+            <meshStandardMaterial color="#1a2523" metalness={0.8} roughness={0.32} />
+          </mesh>
+        ))}
+        <pointLight position={[0, 6.9, 4]} color={accent} intensity={20} distance={20} />
+      </group>
+
+      {/* where to get it */}
+      <mesh position={[-3.1, 1.5, 2.74]}>
+        <planeGeometry args={[2.5, 1.03]} />
+        <meshBasicMaterial map={play} transparent toneMapped={false} />
       </mesh>
 
       {/* a sandwich board out on the pavement */}
@@ -620,6 +681,11 @@ function Shop({ accent }) {
       <mesh position={[0, 11.6, 1.82]}>
         <boxGeometry args={[11.8, 6.8, 0.1]} />
         <meshStandardMaterial color="#05090a" roughness={0.4} metalness={0.5} />
+      </mesh>
+      {/* the listing, as it appears on the store */}
+      <mesh position={[0, 11.6, 1.9]}>
+        <planeGeometry args={[11.2, 5.47]} />
+        <meshBasicMaterial map={store} toneMapped={false} />
       </mesh>
       {[-1, 1].map((side) => (
         <mesh key={side} position={[side * 5.2, 7.4, 1.2]}>
