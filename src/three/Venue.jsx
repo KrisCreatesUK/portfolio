@@ -42,7 +42,10 @@ const SCREEN = {
      at once need the width, and a casino would put it up there anyway */
   casino: { at: [0, 14.6, 1.7], size: [12.8, 7.2] },
   depot: { at: [0, 5.1, -1.05], size: [6.4, 3.6] },
-  shop: { at: [0, 3.15, 2.76], size: [4.6, 2.9] },
+  /* Over the shop rather than in its window. In the window it was a
+     postcard at street distance, and a dark one — which is why the card
+     shop has read as a building with its lights off. */
+  shop: { at: [0, 11.6, 1.88], size: [11.4, 6.4] },
   cinema: { at: [0, 8.8, 3.08], size: [6.8, 4.3] },
 };
 
@@ -575,11 +578,17 @@ function Shop({ accent }) {
         </mesh>
       ))}
 
-      {/* the window, and a lit door beside it */}
+      {/* the window, lit from inside with stock standing up in it */}
       <mesh position={[0, 3.15, 2.72]}>
         <planeGeometry args={[5.4, 3.4]} />
-        <meshBasicMaterial color="#0a0f0d" />
+        <meshBasicMaterial color={accent} transparent opacity={0.22} toneMapped={false} />
       </mesh>
+      {[-1.9, -0.95, 0, 0.95, 1.9].map((x, i) => (
+        <mesh key={x} position={[x, 3.1 + (i % 2) * 0.22, 2.74]} rotation={[0, 0, (i - 2) * 0.05]}>
+          <planeGeometry args={[0.72, 1.05]} />
+          <meshBasicMaterial color={accent} transparent opacity={0.6} toneMapped={false} />
+        </mesh>
+      ))}
       <mesh position={[3.1, 1.6, 2.73]}>
         <planeGeometry args={[1.3, 3.1]} />
         <meshBasicMaterial color={accent} transparent opacity={0.22} toneMapped={false} />
@@ -601,6 +610,26 @@ function Shop({ accent }) {
         radius={0.07}
         speed={1.2}
       />
+
+      {/* the board over the roof: a backing panel, a frame round it and two
+          legs down onto the shop, with bulbs up either side */}
+      <mesh position={[0, 11.6, 1.5]}>
+        <boxGeometry args={[12.2, 7.2, 0.6]} />
+        <meshStandardMaterial {...dark} />
+      </mesh>
+      <mesh position={[0, 11.6, 1.82]}>
+        <boxGeometry args={[11.8, 6.8, 0.1]} />
+        <meshStandardMaterial color="#05090a" roughness={0.4} metalness={0.5} />
+      </mesh>
+      {[-1, 1].map((side) => (
+        <mesh key={side} position={[side * 5.2, 7.4, 1.2]}>
+          <boxGeometry args={[0.45, 4.2, 0.45]} />
+          <meshStandardMaterial {...pale} />
+        </mesh>
+      ))}
+      <Bulbs count={8} from={[-6.3, 8.7, 1.9]} to={[-6.3, 14.5, 1.9]} colour={accent} speed={1.1} />
+      <Bulbs count={8} from={[6.3, 8.7, 1.9]} to={[6.3, 14.5, 1.9]} colour={accent} speed={1.1} />
+      <pointLight position={[0, 10.6, 5]} color={accent} intensity={22} distance={22} />
     </group>
   );
 }

@@ -163,7 +163,7 @@ export default function App() {
 
   /* what the way out is called, which is also what tells the header to show
      it instead of the brand */
-  const backLabel = view.kind === "space" ? null : "City";
+  const backLabel = view.kind === "space" ? null : "Back to Project City";
 
   /* ---- navigation ------------------------------------------------------
      Everything here is one page, so without help the phone's back gesture
@@ -413,7 +413,7 @@ export default function App() {
           >
             <nav className="deck-switch" aria-label="Back">
               <button className="deck-back" onClick={toSpace}>
-                <span aria-hidden="true">←</span> City
+                <span aria-hidden="true">←</span> Back to Project City
               </button>
             </nav>
 
@@ -444,7 +444,7 @@ export default function App() {
 
             <footer className="deck-foot">
               <button className="btn" onClick={toSpace}>
-                <span aria-hidden="true">←</span> Back to City
+                <span aria-hidden="true">←</span> Back to Project City
               </button>
               <button className="btn btn-primary" onClick={() => openPage("contact")}>
                 Get in touch
@@ -462,7 +462,7 @@ export default function App() {
           >
             <nav className="deck-switch" aria-label="Back">
               <button className="deck-back" onClick={toSpace}>
-                <span aria-hidden="true">←</span> City
+                <span aria-hidden="true">←</span> Back to Project City
               </button>
             </nav>
 
@@ -498,7 +498,7 @@ export default function App() {
 
             <footer className="deck-foot">
               <button className="btn" onClick={toSpace}>
-                <span aria-hidden="true">←</span> Back to City
+                <span aria-hidden="true">←</span> Back to Project City
               </button>
             </footer>
           </article>
@@ -542,7 +542,7 @@ function Header({ view, onHome, onPage, backLabel }) {
           <span aria-hidden="true">←</span> {backLabel}
         </button>
       ) : (
-        <button className="brand" onClick={onHome} aria-label="KrisCreates — City">
+        <button className="brand" onClick={onHome} aria-label="KrisCreates — Project City">
           <img className="brand-mark" src="/logo-mark.png" alt="" width="44" height="34" />
           <span className="brand-name">
             Kris<b>Creates</b>

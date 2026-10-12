@@ -79,7 +79,11 @@ export default function Ship() {
       return;
     }
 
-    const s = flight.s + AHEAD;
+    /* Leading, whichever way you are going: held in reverse it moves to
+        the other side of the camera and turns round, rather than sliding
+        backwards down the street nose first. */
+    const back = flight.speed < -0.5;
+    const s = flight.s + (back ? -AHEAD : AHEAD);
     roadAt(s, HOVER + Math.sin(t * 1.1) * 0.3, _pos);
     g.position.copy(_pos);
 
@@ -90,6 +94,7 @@ export default function Ship() {
     roadAt(s + 2.5, 0, _next);
     roadAt(s - 2.5, 0, _prev);
     _aim.subVectors(_next, _prev);
+    if (back) _aim.negate();
     const want = Math.atan2(_aim.x, _aim.z);
 
     let turn = want - yaw.current;

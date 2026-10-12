@@ -7,12 +7,14 @@ import { flight, input } from "./flight";
 import {
   CRAFT_AHEAD,
   CRAFT_HOVER,
+  HQ_FACING,
   HQ_S,
   PERIM,
   cornerAt,
   hqAt,
   roadAt,
   venueAt,
+  venueFacing,
   venueS,
 } from "./layout";
 
@@ -63,6 +65,13 @@ const GLANCE = 74;            // from this far out it starts turning its head
 const LEVEL = 40;
 const BEHIND = 26;            // then it straightens up again over this much
 const HQ_PULL = 1.8;          // how much harder head office has to be nearest
+
+/* Going past a place, the camera leaves the kerb and swings round square in
+   front of it, then back onto the road once it is behind you. Craning from
+   the road could only ever give you an oblique look at a frontage — the one
+   angle from which a lit board is hardest to read. */
+const STANDOFF = 30;          // how far out it stands when it is square on
+const SWING = 0.85;           // and how far round it is allowed to come
 
 /* How far the camera will crane to look at a frontage. A phone needs far
    more of it, not less: its lens is so narrow that a small turn never got
@@ -141,6 +150,7 @@ const _end = new THREE.Vector3();
 const _tower = new THREE.Vector3();
 const _base = new THREE.Vector3();
 const _stop = new THREE.Vector3();
+const _front = new THREE.Vector3();
 
 export default function CameraRig({
   mode,
@@ -454,7 +464,6 @@ export default function CameraRig({
 
     st.eye = damp(st.eye, st.tEye, 3.5, dt);
     roadAt(st.s, st.eye, _here);
-    camera.position.copy(_here);
 
     /* What the camera is actually following is the craft: it is a little
        way up the road, it rounds every corner before the camera does, and
@@ -516,18 +525,34 @@ export default function CameraRig({
       st.glance = damp(st.glance, clamp(swing, -cap, cap) * glance, 4, dt);
     }
 
+    /* Swing off the kerb to square up with it. At full swing the camera is
+       standing in front of the frontage looking straight at it, so the crane
+       is wound back out as it goes — otherwise the two would double up. */
+    const yaw = lookAt < 0 ? HQ_FACING : venueFacing(lookAt);
+    _front.set(
+      _stop.x + Math.sin(yaw) * STANDOFF,
+      st.eye,
+      _stop.z + Math.cos(yaw) * STANDOFF
+    );
+    const swing = mode === "project" ? 0 : glance * SWING;
+    camera.position.lerpVectors(_here, _front, swing);
+
     /* the head you turned yourself, on top of that */
     st.look = damp(st.look, st.tLook, 3.2, dt);
-    const head = st.look + st.glance;
+    const head = st.look + st.glance * (1 - swing);
     if (!st.dragging && !input.turn && mode === "space" && st.idle > RESUME_AFTER) {
       st.tLook = damp(st.tLook, 0, 1.2, dt);
     }
-    _dir.subVectors(_want, _here);
+    _dir.subVectors(_want, camera.position);
     /* No framing offset here on purpose: the hero copy owns the left of the
        screen and the project rail the right, which leaves the clear band more
        or less centred — so what the camera is looking at is already in it. */
     if (head) _dir.applyAxisAngle(UP, head);
-    st.target.lerp(_dir.add(_here), 1 - Math.pow(0.0015, dt));
+    _dir.add(camera.position);
+    /* and once it is square on, it looks straight at the thing rather than
+       down a road it is no longer on */
+    _dir.lerp(_stop, swing);
+    st.target.lerp(_dir, 1 - Math.pow(0.0015, dt));
     camera.lookAt(st.target);
 
     flight.flying = mode === "space";
