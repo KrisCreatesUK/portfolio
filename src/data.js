@@ -248,6 +248,38 @@ export const capability = [
   },
 ];
 
+/* ---------------------------------------------------------
+   HEAD OFFICE — the things that belong in a footer.
+
+   Every line here is checked against what is already
+   published on the company's own sites. Nothing about the
+   trading name, the registration or the policies is written
+   from memory.
+--------------------------------------------------------- */
+export const office = {
+  company: "AlfieLucas Ltd",
+  tradingAs: "KrisCreates",
+  registration: "Registered in England and Wales, company no. 16916815",
+  site: [
+    "This site has no forms, no accounts and no analytics of any kind — nothing here asks you for anything or records what you looked at.",
+    "It is static files on a host, so the host keeps its own ordinary request logs. That is the whole of it.",
+  ],
+  policies: [
+    {
+      label: "CompKit — privacy policy",
+      href: "https://compkit.kriscreates.co.uk/privacy-policy.html",
+    },
+    {
+      label: "CompKit — terms",
+      href: "https://compkit.kriscreates.co.uk/terms.html",
+    },
+    {
+      label: "Pokellectr — privacy policy",
+      href: "https://pokellectr.kriscreates.co.uk/privacy/",
+    },
+  ],
+};
+
 export const links = [
   { label: "LinkedIn", href: "https://www.linkedin.com/in/kriscreatesuk/", tag: "in" },
   { label: "Upwork", href: "https://www.upwork.com/freelancers/~015ddc5bd348bef361", tag: "Up" },

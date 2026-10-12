@@ -17,7 +17,7 @@ import { HQ_FACING, HQ_SCALE, hqAt, venueAt, venueFacing } from "./layout";
    arrive at the same place.
    ========================================================= */
 
-export default function World({ projects, featuredId, lite, onSelect, onHover }) {
+export default function World({ projects, featuredId, lite, onSelect, onHover, onOffice }) {
   return (
     <group>
       <Streets />
@@ -31,6 +31,7 @@ export default function World({ projects, featuredId, lite, onSelect, onHover })
           featuredId={featuredId}
           onSelect={onSelect}
           onHover={onHover}
+          onOffice={onOffice}
         />
         {/* the light that used to sit at the centre of the map travels with
             the building, because the building is what it was ever for */}

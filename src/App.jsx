@@ -2,7 +2,7 @@ import { Component, Suspense, lazy, useCallback, useEffect, useRef, useState } f
 
 import Counter from "./components/Counter";
 import ProjectView from "./components/ProjectView";
-import { profile, projects, capability, links } from "./data";
+import { profile, projects, capability, links, office } from "./data";
 import { input } from "./three/flight";
 import "./styles.css";
 
@@ -311,6 +311,7 @@ export default function App() {
                 setPick((cur) => (cur === i ? cur : null));
               }}
               onBuilt={() => setBuilt(true)}
+              onOffice={() => openPage("contact")}
             />
           </Suspense>
         </StageBoundary>
@@ -514,11 +515,11 @@ export default function App() {
 
             <header className="deck-head">
               <div className="deck-meta">
-                <span className="deck-code">SYS_03</span>
+                <span className="deck-code">HEAD OFFICE</span>
                 <span className="deck-seq">OPEN TO WORK</span>
               </div>
-              <h1 className="deck-title glitch" id="contact-title" data-text="Get in touch">
-                Get in touch
+              <h1 className="deck-title glitch" id="contact-title" data-text="Head office">
+                Head office
               </h1>
               <p className="deck-blurb">
                 Got a system that needs building, finishing or rescuing? Send the detail
@@ -542,6 +543,45 @@ export default function App() {
               ))}
             </ul>
 
+            {/* The things that belong in a footer, in the building the rest
+                of the street is arranged around. */}
+            <div className="office">
+              <section className="office-card">
+                <h2>Who you are dealing with</h2>
+                <p className="office-lead">
+                  {office.company}, trading as {office.tradingAs}.
+                </p>
+                <p>{office.registration}</p>
+                <p>
+                  <a href={`mailto:${profile.email}`}>{profile.email}</a>
+                </p>
+              </section>
+
+              <section className="office-card">
+                <h2>This site</h2>
+                {office.site.map((line) => (
+                  <p key={line}>{line}</p>
+                ))}
+              </section>
+
+              <section className="office-card">
+                <h2>Product policies</h2>
+                <p>
+                  The products have their own, on their own sites, because that is
+                  where they apply.
+                </p>
+                <ul className="office-links">
+                  {office.policies.map((l) => (
+                    <li key={l.href}>
+                      <a href={l.href} target="_blank" rel="noopener">
+                        {l.label} <span aria-hidden="true">↗</span>
+                      </a>
+                    </li>
+                  ))}
+                </ul>
+              </section>
+            </div>
+
             <footer className="deck-foot">
               <button className="btn" onClick={toSpace}>
                 <span aria-hidden="true">←</span> Back to Project City
@@ -553,7 +593,10 @@ export default function App() {
 
       <footer className="site-foot">
         <span>
-          © {new Date().getFullYear()} {profile.handle}
+          © {new Date().getFullYear()} {office.company} trading as {profile.handle} ·{" "}
+          <button className="foot-link" onClick={() => openPage("contact")}>
+            Head office
+          </button>
         </span>
         <span className="foot-mid">
           Product work:{" "}
@@ -607,7 +650,7 @@ function Header({ view, onHome, onPage, backLabel }) {
           className={view.kind === "page" && view.id === "contact" ? "is-on" : ""}
           onClick={() => onPage("contact")}
         >
-          Contact
+          Head office
         </button>
         <a
           className="nav-out"

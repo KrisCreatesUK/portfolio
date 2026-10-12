@@ -18,7 +18,11 @@ import { FLOOR_H, TOWER_W, TOWER_D, floorY, towerTop } from "./layout";
    to that product's own place on the map.
 
    The storeys above the projects are offices with the lights
-   half on. They are scenery, and they do not take clicks.
+   half on. The ground floor is a reception: press it and you
+   get the business end of the place — who you are dealing
+   with, what this site does and does not do, and where the
+   products' own policies live. All the things that would
+   otherwise be set in six point at the bottom of a page.
    ========================================================= */
 
 const shell = { color: "#0c1513", roughness: 0.42, metalness: 0.7 };
@@ -302,9 +306,21 @@ function Floodlights({ top, lite }) {
   );
 }
 
-export default function Hq({ lite, projects, featuredId, onSelect, onHover }) {
+export default function Hq({ lite, projects, featuredId, onSelect, onHover, onOffice }) {
   const floors = projects.length + SPARE_FLOORS;
   const top = towerTop(floors);
+
+  const boardTex = useMemo(
+    () =>
+      labelTexture(
+        [
+          { text: "HEAD OFFICE", size: 34, color: "#cfe9c0", spacing: 9 },
+          { text: "CONTACT  ·  COMPANY  ·  POLICIES", size: 22, color: "#7f9b8e", spacing: 4 },
+        ],
+        { width: 1024, height: 256 }
+      ),
+    []
+  );
 
   const capTex = useMemo(
     () =>
@@ -336,6 +352,49 @@ export default function Hq({ lite, projects, featuredId, onSelect, onHover }) {
       </mesh>
 
       <Floodlights top={top} lite={lite} />
+
+      {/* Reception. One slab takes the press, so the whole base of the
+          building is the target rather than a sign you have to hit. */}
+      <group
+        onClick={(e) => {
+          if (!isTap()) return;
+          e.stopPropagation();
+          onOffice?.();
+        }}
+        /* No hover handler on purpose: the hover state is what decides
+           which frontage is live, and reception is not one of them. Putting
+           it in there unfeatured every venue on the street. */
+      >
+        <mesh position={[0, 1.4, TOWER_D / 2 + 1.1]} visible={false}>
+          <boxGeometry args={[TOWER_W + 2.4, 3.4, 3]} />
+          <meshBasicMaterial />
+        </mesh>
+
+        {/* the glazed front of it, lit from inside */}
+        <mesh position={[0, 1.1, TOWER_D / 2 + 0.03]}>
+          <planeGeometry args={[TOWER_W - 0.6, 2]} />
+          <meshBasicMaterial color="#b9ff7a" transparent opacity={0.22} toneMapped={false} />
+        </mesh>
+
+        {/* a canopy over the door */}
+        <mesh position={[0, 2.3, TOWER_D / 2 + 0.7]}>
+          <boxGeometry args={[TOWER_W + 1.2, 0.18, 1.6]} />
+          <meshStandardMaterial {...dark} />
+        </mesh>
+
+        {/* and the board that says what is in here */}
+        <mesh position={[0, 2.95, TOWER_D / 2 + 0.12]}>
+          <planeGeometry args={[TOWER_W + 0.2, 1.1]} />
+          <meshBasicMaterial map={boardTex} transparent toneMapped={false} />
+        </mesh>
+
+        <pointLight
+          position={[0, 1.6, TOWER_D / 2 + 2.4]}
+          color="#93F025"
+          intensity={14}
+          distance={10}
+        />
+      </group>
 
       {/* the products, lowest number at the bottom */}
       {projects.map((p, i) => (

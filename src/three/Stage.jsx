@@ -58,6 +58,7 @@ export default function Stage({
   onHover,
   onFeature,
   onBuilt,
+  onOffice,
 }) {
   const lite = useLite();
   const focusIndex = projects.findIndex((p) => p.id === activeId);
@@ -96,6 +97,7 @@ export default function Stage({
           lite={lite}
           onSelect={onSelect}
           onHover={onHover}
+          onOffice={onOffice}
         />
       </Suspense>
 
