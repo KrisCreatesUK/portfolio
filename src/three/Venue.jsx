@@ -3,7 +3,7 @@ import { useFrame } from "@react-three/fiber";
 import { RoundedBox, useTexture } from "@react-three/drei";
 import * as THREE from "three";
 
-import { cover } from "./textures";
+import { cover, filmTexture } from "./textures";
 import { isTap } from "./gesture";
 
 /* =========================================================
@@ -746,6 +746,70 @@ function Shop({ accent }) {
    A tall frontage, a marquee out over the pavement with two
    rows of bulbs, and a blade sign up the corner.
    ========================================================= */
+/* A length of film running across the front of the building, and the two
+   reels feeding it. Nothing here is a video: the strip is one tiled texture
+   with its offset wound on every frame, which costs nothing and never has to
+   wait for anything to load. */
+function Film({ accent, y, z, width, height, speed = 0.16 }) {
+  const tex = useMemo(() => {
+    const t = filmTexture(accent);
+    t.repeat.set(Math.max(2, Math.round(width / 2.4)), 1);
+    return t;
+  }, [accent, width]);
+
+  useFrame((state) => {
+    /* set through the method: the compiler treats a memoised value as
+       read-only, and this is the one three gives you for it */
+    tex.offset.setX((state.clock.elapsedTime * speed) % 1);
+  });
+
+  useEffect(() => () => tex.dispose(), [tex]);
+
+  return (
+    <group position={[0, y, z]}>
+      <mesh>
+        <planeGeometry args={[width, height]} />
+        <meshBasicMaterial map={tex} toneMapped={false} />
+      </mesh>
+      <lineSegments position={[0, 0, 0.02]} raycast={() => null}>
+        <edgesGeometry args={[new THREE.PlaneGeometry(width, height)]} />
+        <lineBasicMaterial color={accent} transparent opacity={0.5} />
+      </lineSegments>
+    </group>
+  );
+}
+
+/* the reel it comes off, turning at the speed the film is moving */
+function Reel({ accent, position, speed = 1 }) {
+  const ref = useRef();
+  useFrame((state) => {
+    if (ref.current) ref.current.rotation.z = state.clock.elapsedTime * speed;
+  });
+
+  return (
+    <group position={position} ref={ref}>
+      <mesh rotation={[Math.PI / 2, 0, 0]}>
+        <cylinderGeometry args={[0.95, 0.95, 0.42, 24]} />
+        <meshStandardMaterial color="#1b2530" metalness={0.8} roughness={0.35} />
+      </mesh>
+      <mesh rotation={[Math.PI / 2, 0, 0]} position={[0, 0, 0.24]}>
+        <torusGeometry args={[0.95, 0.07, 8, 24]} />
+        <meshBasicMaterial color={accent} transparent opacity={0.8} toneMapped={false} />
+      </mesh>
+      {[0, 1, 2].map((i) => (
+        <mesh key={i} position={[0, 0, 0.26]} rotation={[0, 0, (i / 3) * Math.PI * 2]}>
+          <boxGeometry args={[1.6, 0.14, 0.06]} />
+          <meshBasicMaterial color={accent} transparent opacity={0.3} toneMapped={false} />
+        </mesh>
+      ))}
+      <mesh position={[0, 0, 0.28]}>
+        <circleGeometry args={[0.2, 14]} />
+        <meshBasicMaterial color={accent} transparent opacity={0.8} toneMapped={false} />
+      </mesh>
+    </group>
+  );
+}
+
 function Cinema({ accent }) {
   return (
     <group>
@@ -783,6 +847,15 @@ function Cinema({ accent }) {
           <meshStandardMaterial {...dark} />
         </mesh>
       ))}
+
+      {/* The film: a long run across the front, and a short one coming off
+          it down the side — the long thing in, the short thing out, which is
+          the whole of what the product does. */}
+      <Film accent={accent} y={7.9} z={3.12} width={11.4} height={1.7} speed={0.14} />
+      <Film accent={accent} y={10.4} z={3.12} width={7.6} height={1.15} speed={-0.26} />
+      {/* the reels sit at the ends of the short run, feeding it */}
+      <Reel accent={accent} position={[-4.6, 10.4, 3.1]} speed={0.8} />
+      <Reel accent={accent} position={[4.6, 10.4, 3.1]} speed={-0.8} />
 
       {/* poster boards either side of the doors */}
       {[-4.2, 4.2].map((x) => (

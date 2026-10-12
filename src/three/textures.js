@@ -122,3 +122,60 @@ export function cover(tex, aspect) {
   tex.needsUpdate = true;
   return tex;
 }
+
+/* =========================================================
+   FILM
+   ---------------------------------------------------------
+   A length of stock: sprocket holes down both edges and a
+   frame line between each frame. Drawn once and tiled, so
+   running it is a matter of moving the offset rather than
+   redrawing anything.
+   ========================================================= */
+export function filmTexture(accent = "#FF5C8A") {
+  const W = 512;
+  const H = 128;
+  const c = document.createElement("canvas");
+  c.width = W;
+  c.height = H;
+  const g = c.getContext("2d");
+
+  g.fillStyle = "#0a0d10";
+  g.fillRect(0, 0, W, H);
+
+  /* the picture area, a shade lighter than the stock */
+  g.fillStyle = "#141a20";
+  g.fillRect(0, H * 0.26, W, H * 0.48);
+
+  /* four frames across, with a line between them */
+  g.strokeStyle = "rgba(190,210,225,0.22)";
+  g.lineWidth = 2;
+  for (let i = 0; i <= 4; i++) {
+    const x = (i * W) / 4;
+    g.beginPath();
+    g.moveTo(x, H * 0.26);
+    g.lineTo(x, H * 0.74);
+    g.stroke();
+  }
+
+  /* sprockets top and bottom */
+  g.fillStyle = "#04070a";
+  const holes = 8;
+  for (let i = 0; i < holes; i++) {
+    const x = (i + 0.5) * (W / holes) - W / holes / 4;
+    const w = W / holes / 2;
+    g.fillRect(x, H * 0.07, w, H * 0.12);
+    g.fillRect(x, H * 0.81, w, H * 0.12);
+  }
+
+  /* a wash of the product colour through the picture area */
+  g.fillStyle = accent;
+  g.globalAlpha = 0.14;
+  g.fillRect(0, H * 0.26, W, H * 0.48);
+  g.globalAlpha = 1;
+
+  const tex = new THREE.CanvasTexture(c);
+  tex.wrapS = THREE.RepeatWrapping;
+  tex.wrapT = THREE.ClampToEdgeWrapping;
+  tex.colorSpace = THREE.SRGBColorSpace;
+  return tex;
+}

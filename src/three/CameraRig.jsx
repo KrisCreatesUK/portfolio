@@ -43,6 +43,12 @@ import {
    ========================================================= */
 
 const CRUISE = 14;            // drifting along when left alone
+
+/* A phone shows a narrow slice of the street, so the same speed across the
+   ground goes past far faster than it does on a desktop — and a thumb on a
+   throttle is a blunter instrument than a held key. Everything that moves
+   you is wound back on a small screen. */
+const PHONE_PACE = 0.55;
 const PUSH = 52;              // units a second with forward held
 const DRAG_FWD = 210;         // how far a full-screen drag carries you
 const DRAG_LOOK = 2.2;
@@ -70,7 +76,7 @@ const HQ_PULL = 1.8;          // how much harder head office has to be nearest
    front of it, then back onto the road once it is behind you. Craning from
    the road could only ever give you an oblique look at a frontage — the one
    angle from which a lit board is hardest to read. */
-const STANDOFF = 30;          // how far out it stands when it is square on
+const STANDOFF = 40;          // how far out it stands when it is square on
 const SWING = 0.85;           // and how far round it is allowed to come
 
 /* How far the camera will crane to look at a frontage. A phone needs far
@@ -311,6 +317,8 @@ export default function CameraRig({
   useFrame((frame, delta) => {
     const st = state.current;
     const dt = Math.min(delta, 0.05);
+    const wide = frame.viewport.aspect > 1.25;
+    const pace = wide ? 1 : PHONE_PACE;
 
     /* ---- the arrival ---------------------------------------------------
        Timed off the clock, not off accumulated frame deltas: dt is clamped
@@ -399,7 +407,7 @@ export default function CameraRig({
       if (st.flyTo != null) {
         /* driving itself to a frontage */
         const gap = shortest(st.s, st.flyTo);
-        st.s += gap * Math.min(1, dt * 2.3);
+        st.s += gap * Math.min(1, dt * (wide ? 2.3 : 1.5));
         st.speed = 0;
         st.idle = 0;
         if (Math.abs(gap) < 0.6) {
@@ -410,7 +418,7 @@ export default function CameraRig({
         /* forward and back, held */
         if (input.climb) {
           st.idle = 0;
-          st.speed = input.climb * PUSH;
+          st.speed = input.climb * PUSH * pace;
         } else {
           st.speed = damp(st.speed, 0, 5, dt);
         }
@@ -427,7 +435,7 @@ export default function CameraRig({
         st.s += st.speed * bend * dt;
 
         const touring = !st.dragging && !pointing && !reduced && st.idle > RESUME_AFTER;
-        if (touring) st.s += CRUISE * bend * dt;
+        if (touring) st.s += CRUISE * bend * pace * dt;
       }
 
       /* looking across the street, held */
@@ -460,7 +468,6 @@ export default function CameraRig({
     if (mode === "project" && focusIndex >= 0) st.featured = focusIndex;
 
     /* ---- where the camera is, and what it is looking at ---------------- */
-    const wide = frame.viewport.aspect > 1.25;
 
     st.eye = damp(st.eye, st.tEye, 3.5, dt);
     roadAt(st.s, st.eye, _here);
@@ -507,7 +514,9 @@ export default function CameraRig({
       _stop.y = 15;             // halfway up it, not at its feet
     } else {
       venueAt(lookAt, total, _stop);
-      _stop.y = 7;
+      /* up where the boards and signs are, not at the kerb: aiming at its
+         feet pushed everything worth seeing above the top of the frame */
+      _stop.y = 9.5;
     }
 
     if (mode === "project") {
