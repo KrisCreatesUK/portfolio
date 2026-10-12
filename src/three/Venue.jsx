@@ -260,7 +260,11 @@ export default function Venue({ project, kind, position, facing, featured, onSel
         media.v.pause();
       }
       if (screen.current) {
-        const live = want && media.v.readyState >= 2 ? media.t : map;
+        /* Hold the still until the video has actually painted a frame:
+           readyState alone reports data is there before anything has been
+           handed to the texture. */
+        const painted = media.v.readyState >= 3 && media.v.currentTime > 0.08;
+        const live = want && painted ? media.t : map;
         if (screen.current.material.map !== live) {
           screen.current.material.map = live;
           screen.current.material.needsUpdate = true;

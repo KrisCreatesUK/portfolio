@@ -30,21 +30,21 @@ export default function ProjectView({ project, open, index, total, onClose, onJu
       aria-labelledby={`${project.id}-title`}
     >
       {/* ---------- the switcher, stuck under the header ---------- */}
-      <nav className="deck-switch" aria-label="Switch volume">
+      <nav className="deck-switch" aria-label="Switch project">
         <button className="deck-back" onClick={onClose}>
-          <span aria-hidden="true">←</span> KrisCity
+          <span aria-hidden="true">←</span> City
         </button>
         <div className="deck-tabs">
           {projects.map((p) => (
             <button
               key={p.id}
-              className={`vol-tab ${p.id === project.id ? "is-active" : ""}`}
+              className={`proj-tab ${p.id === project.id ? "is-active" : ""}`}
               style={{ "--accent": p.accent }}
               aria-current={p.id === project.id ? "true" : undefined}
               onClick={() => onJump(p.id)}
             >
-              <span className="vol-tab-code">{p.code}</span>
-              <span className="vol-tab-name">{p.name}</span>
+              <span className="proj-tab-code">{p.code}</span>
+              <span className="proj-tab-name">{p.name}</span>
             </button>
           ))}
         </div>
@@ -146,7 +146,7 @@ export default function ProjectView({ project, open, index, total, onClose, onJu
 
       <footer className="deck-foot">
         <button className="btn" onClick={onClose}>
-          <span aria-hidden="true">←</span> Back to KrisCity
+          <span aria-hidden="true">←</span> Back to City
         </button>
         <button className="btn btn-primary" onClick={onContact}>Start a conversation</button>
       </footer>

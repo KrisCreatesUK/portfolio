@@ -124,18 +124,22 @@ export function venueAt(index, total, out) {
    first side, placed so that going round the block it is the
    last thing you pass before coming back to CompKit.
    ========================================================= */
-export const HQ_S = 18;
+/* Near the end of the last side, not the start of the first. Standing at
+   the start of the first it was the thing you came round the corner onto,
+   and it took the light off CompKit at exactly the moment CompKit should
+   have been coming up. Here it is the last thing you pass, and the corner
+   after it belongs to CompKit. */
+export const HQ_S = LEG * 3 + ROAD + 48;
 
 export function hqAt(out) {
-  const u = HQ_S - ROAD;
-  const x = u;
-  const z = ROAD - SETBACK;
+  const x = -(ROAD - SETBACK);
+  const z = HQ_S - LEG * 3 - ROAD;
   if (out) return out.set(x, 0, z);
   return [x, 0, z];
 }
 
-/* facing the road, which on this side is the way the camera is going */
-export const HQ_FACING = 0;
+/* facing the road, which on this side is back across the block */
+export const HQ_FACING = -Math.PI / 2;
 
 /* Turned to face the traffic going past it. */
 export function venueFacing(index) {

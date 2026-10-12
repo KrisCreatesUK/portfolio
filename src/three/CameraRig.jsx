@@ -62,6 +62,7 @@ const GLANCE = 74;            // from this far out it starts turning its head
    be any use. */
 const LEVEL = 40;
 const BEHIND = 26;            // then it straightens up again over this much
+const HQ_PULL = 1.8;          // how much harder head office has to be nearest
 
 /* How far the camera will crane to look at a frontage. A phone needs far
    more of it, not less: its lens is so narrow that a small turn never got
@@ -471,8 +472,11 @@ export default function CameraRig({
     let look = venueS(st.featured);
     let lookAt = st.featured;
     if (mode !== "project") {
+      /* A project wins unless head office is a good deal nearer: the point
+         of the street is the work, and the tower pulling the camera off a
+         frontage that was about to come up is exactly what it must not do. */
       const score = (d) => (d >= 0 ? d : -d * 2.2);
-      if (score(shortest(st.s, HQ_S)) < score(shortest(st.s, look))) {
+      if (score(shortest(st.s, HQ_S)) * HQ_PULL < score(shortest(st.s, look))) {
         look = HQ_S;
         lookAt = -1;
       }
@@ -520,7 +524,7 @@ export default function CameraRig({
     }
     _dir.subVectors(_want, _here);
     /* No framing offset here on purpose: the hero copy owns the left of the
-       screen and the volume rail the right, which leaves the clear band more
+       screen and the project rail the right, which leaves the clear band more
        or less centred — so what the camera is looking at is already in it. */
     if (head) _dir.applyAxisAngle(UP, head);
     st.target.lerp(_dir.add(_here), 1 - Math.pow(0.0015, dt));

@@ -500,6 +500,9 @@ main { position: relative; z-index: 10; }
   grid-area: pad;
   align-self: end;
   justify-self: end;
+  display: flex;
+  align-items: center;
+  gap: 10px;
 }
 
 .throttle {
@@ -525,7 +528,26 @@ main { position: relative; z-index: 10; }
   transition: transform 0.1s, box-shadow 0.2s, border-color 0.2s;
 }
 
-.throttle::after {
+/* the way back is the smaller of the two: it is the one you reach for less */
+.throttle-back {
+  width: 52px;
+  height: 52px;
+  border-color: var(--line);
+  background: rgba(6, 10, 10, 0.72);
+  color: var(--soft);
+}
+
+.throttle-back:hover { border-color: var(--acc); color: var(--acc); }
+.throttle-back::after { display: none; }
+
+.throttle-arrow.is-back {
+  border-bottom: 0;
+  border-top: 11px solid currentColor;
+  border-left: 8px solid transparent;
+  border-right: 8px solid transparent;
+}
+
+.throttle-go::after {
   /* a ring that pulses outward, so it reads as the live control */
   content: "";
   position: absolute;
@@ -977,7 +999,7 @@ main { position: relative; z-index: 10; }
 
 .deck-tabs { display: flex; gap: 8px; }
 
-.vol-tab {
+.proj-tab {
   flex: 0 0 auto;
   display: inline-flex;
   align-items: center;
@@ -992,23 +1014,23 @@ main { position: relative; z-index: 10; }
   transition: border-color 0.2s, color 0.2s, background 0.2s;
 }
 
-.vol-tab:hover { border-color: var(--line-2); color: var(--text); }
+.proj-tab:hover { border-color: var(--line-2); color: var(--text); }
 
-.vol-tab.is-active {
+.proj-tab.is-active {
   border-color: var(--accent);
   color: var(--text);
   background: color-mix(in srgb, var(--accent) 10%, transparent);
   box-shadow: 0 0 0 1px color-mix(in srgb, var(--accent) 35%, transparent) inset;
 }
 
-.vol-tab-code {
+.proj-tab-code {
   font-family: var(--mono);
   font-size: 10px;
   letter-spacing: 0.14em;
   color: var(--accent);
 }
 
-.vol-tab-name { font-size: 13px; font-weight: 600; white-space: nowrap; }
+.proj-tab-name { font-size: 13px; font-weight: 600; white-space: nowrap; }
 
 /* ---- title card ------------------------------------------------------ */
 /* The title card is the first thing over the venue you have just flown to,
@@ -1389,8 +1411,8 @@ main { position: relative; z-index: 10; }
   .link-tiles { grid-template-columns: 1fr; }
   .site-foot { justify-content: center; text-align: center; }
   .foot-mid { order: 3; }
-  .vol-tab-name { display: none; }
-  .vol-tab.is-active .vol-tab-name { display: inline; }
+  .proj-tab-name { display: none; }
+  .proj-tab.is-active .proj-tab-name { display: inline; }
 }
 
 @media (prefers-reduced-motion: reduce) {

@@ -112,14 +112,14 @@ export default function Streets({ accent = "#57B41A" }) {
         </group>
       ))}
 
-      {/* head office has one too, off the first side */}
+      {/* head office has one too, off the last side */}
       <mesh
-        position={[HQ_S - ROAD, 0.05, ROAD - SETBACK / 2]}
-        rotation={[-Math.PI / 2, 0, Math.PI / 2]}
+        position={[-ROAD + SETBACK / 2, 0.05, HQ_S - LEG * 3 - ROAD]}
+        rotation={[-Math.PI / 2, 0, 0]}
         receiveShadow
         raycast={() => null}
       >
-        <planeGeometry args={[12, SETBACK + 4]} />
+        <planeGeometry args={[SETBACK + 4, 12]} />
         <meshStandardMaterial color="#0e1715" roughness={0.92} metalness={0.08} />
       </mesh>
 

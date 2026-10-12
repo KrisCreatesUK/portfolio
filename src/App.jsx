@@ -64,27 +64,39 @@ function FlightPad() {
     };
   }, []);
 
-  /* One control: the throttle. Looking around is the drag, and going
-     backwards is something nobody wanted to do, so the other three keys
-     have gone — they were three more things in the way of the view.
+  /* Two controls: along the street, and back along it. Looking around is
+     the drag, so there is nothing else to put here — and going back means
+     you can take the block the other way round rather than having to go
+     all the way about to see something again.
 
-     It must not light up, select, or keep a focus ring after a tap: on a
+     Neither must light up, select, or keep a focus ring after a tap: on a
      phone a held button was ending up highlighted and staying that way. */
+  const key = (name, label, value, children) => (
+    <button
+      className={`throttle throttle-${name}`}
+      aria-label={label}
+      onContextMenu={(e) => e.preventDefault()}
+      onPointerDown={set("climb", value)}
+      onPointerUp={clear}
+      onPointerLeave={clear}
+      onPointerCancel={clear}
+      onBlur={clear}
+    >
+      {children}
+    </button>
+  );
+
   return (
     <div className="pad">
-      <button
-        className="throttle"
-        aria-label="Fly forward"
-        onContextMenu={(e) => e.preventDefault()}
-        onPointerDown={set("climb", 1)}
-        onPointerUp={clear}
-        onPointerLeave={clear}
-        onPointerCancel={clear}
-        onBlur={clear}
-      >
-        <span className="throttle-arrow" aria-hidden="true" />
-        <span className="throttle-word" aria-hidden="true">GO</span>
-      </button>
+      {key("back", "Fly back down the street", -1, (
+        <span className="throttle-arrow is-back" aria-hidden="true" />
+      ))}
+      {key("go", "Fly forward up the street", 1, (
+        <>
+          <span className="throttle-arrow" aria-hidden="true" />
+          <span className="throttle-word" aria-hidden="true">GO</span>
+        </>
+      ))}
     </div>
   );
 }
@@ -151,7 +163,7 @@ export default function App() {
 
   /* what the way out is called, which is also what tells the header to show
      it instead of the brand */
-  const backLabel = view.kind === "space" ? null : "KrisCity";
+  const backLabel = view.kind === "space" ? null : "City";
 
   /* ---- navigation ------------------------------------------------------
      Everything here is one page, so without help the phone's back gesture
@@ -279,7 +291,7 @@ export default function App() {
 
             <div className="hero-actions">
               <button className="btn btn-primary" onClick={() => openProject(projects[0].id)}>
-                Open the first volume
+                Open the first one
               </button>
               <a
                 className="btn"
@@ -333,7 +345,7 @@ export default function App() {
           <div className="showing" style={{ "--accent": showing.accent }}>
             <button
               className="showing-step"
-              aria-label="Previous volume"
+              aria-label="Previous project"
               onClick={() => goTo(featured - 1)}
             >
               ‹
@@ -350,7 +362,7 @@ export default function App() {
 
             <button
               className="showing-step"
-              aria-label="Next volume"
+              aria-label="Next project"
               onClick={() => goTo(featured + 1)}
             >
               ›
@@ -401,7 +413,7 @@ export default function App() {
           >
             <nav className="deck-switch" aria-label="Back">
               <button className="deck-back" onClick={toSpace}>
-                <span aria-hidden="true">←</span> KrisCity
+                <span aria-hidden="true">←</span> City
               </button>
             </nav>
 
@@ -432,7 +444,7 @@ export default function App() {
 
             <footer className="deck-foot">
               <button className="btn" onClick={toSpace}>
-                <span aria-hidden="true">←</span> Back to KrisCity
+                <span aria-hidden="true">←</span> Back to City
               </button>
               <button className="btn btn-primary" onClick={() => openPage("contact")}>
                 Get in touch
@@ -450,7 +462,7 @@ export default function App() {
           >
             <nav className="deck-switch" aria-label="Back">
               <button className="deck-back" onClick={toSpace}>
-                <span aria-hidden="true">←</span> KrisCity
+                <span aria-hidden="true">←</span> City
               </button>
             </nav>
 
@@ -486,7 +498,7 @@ export default function App() {
 
             <footer className="deck-foot">
               <button className="btn" onClick={toSpace}>
-                <span aria-hidden="true">←</span> Back to KrisCity
+                <span aria-hidden="true">←</span> Back to City
               </button>
             </footer>
           </article>
@@ -530,7 +542,7 @@ function Header({ view, onHome, onPage, backLabel }) {
           <span aria-hidden="true">←</span> {backLabel}
         </button>
       ) : (
-        <button className="brand" onClick={onHome} aria-label="KrisCreates — KrisCity">
+        <button className="brand" onClick={onHome} aria-label="KrisCreates — City">
           <img className="brand-mark" src="/logo-mark.png" alt="" width="44" height="34" />
           <span className="brand-name">
             Kris<b>Creates</b>

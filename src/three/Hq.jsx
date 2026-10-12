@@ -337,7 +337,7 @@ export default function Hq({ lite, projects, featuredId, onSelect, onHover }) {
 
       <Floodlights top={top} lite={lite} />
 
-      {/* the products, lowest volume at the bottom */}
+      {/* the products, lowest number at the bottom */}
       {projects.map((p, i) => (
         <ProjectStorey
           key={p.id}
