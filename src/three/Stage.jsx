@@ -1,5 +1,5 @@
-import { Suspense, useEffect, useState } from "react";
-import { Canvas } from "@react-three/fiber";
+import { Suspense, useEffect, useRef, useState } from "react";
+import { Canvas, useFrame } from "@react-three/fiber";
 
 import World from "./World";
 import Cyberspace from "./Cyberspace";
@@ -14,6 +14,19 @@ import Ship from "./Ship";
    over it — which keeps the copy and the outbound links in
    the markup where crawlers can still find them.
    ========================================================= */
+
+/* Mounts only once everything inside the same Suspense boundary has its
+   textures, and waits one more frame so the first picture is actually on
+   the canvas before the loading screen is taken away. */
+function Built({ onBuilt }) {
+  const seen = useRef(false);
+  useFrame(() => {
+    if (seen.current) return;
+    seen.current = true;
+    onBuilt?.();
+  });
+  return null;
+}
 
 function useLite() {
   const [lite, setLite] = useState(false);
@@ -44,6 +57,7 @@ export default function Stage({
   onSelect,
   onHover,
   onFeature,
+  onBuilt,
 }) {
   const lite = useLite();
   const focusIndex = projects.findIndex((p) => p.id === activeId);
@@ -75,6 +89,7 @@ export default function Stage({
           there to light. Head office carries its own. */}
 
       <Suspense fallback={null}>
+        <Built onBuilt={onBuilt} />
         <World
           projects={projects}
           featuredId={featuredId}

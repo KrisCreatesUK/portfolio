@@ -131,10 +131,54 @@ function Boot() {
   );
 }
 
+/* =========================================================
+   LOADING PROJECT CITY
+   ---------------------------------------------------------
+   The page's words are in the markup and show at once, but
+   the city behind them is a separate chunk plus its textures
+   and takes a while on a thin connection — on a phone over a
+   hotspot, long enough to look broken.
+
+   So this sits over the top until the scene reports it has
+   something to draw, and says what is happening. It gives up
+   after a while and gets out of the way regardless: a loading
+   screen that can outlive what it is waiting for is worse
+   than no loading screen at all.
+   ========================================================= */
+function Loading({ done }) {
+  const [gone, setGone] = useState(false);
+
+  useEffect(() => {
+    if (!done) {
+      /* the long stop: whatever happened, do not sit on the page */
+      const bail = setTimeout(() => setGone(true), 14000);
+      return () => clearTimeout(bail);
+    }
+    const t = setTimeout(() => setGone(true), 620);   // let it fade first
+    return () => clearTimeout(t);
+  }, [done]);
+
+  if (gone) return null;
+
+  return (
+    <div className={`loading ${done ? "is-done" : ""}`} role="status" aria-live="polite">
+      <div className="loading-inner">
+        <img className="loading-mark" src="/logo-mark.png" alt="" width="54" height="42" />
+        <p className="loading-name">PROJECT CITY</p>
+        <div className="loading-bar"><span /></div>
+        <p className="loading-note">Building the street</p>
+      </div>
+    </div>
+  );
+}
+
 export default function App() {
   const [activeId, setActiveId] = useState(projects[0].id);
   const [hoverId, setHoverId] = useState(null);
   const [view, setView] = useState({ kind: "space" });
+
+  /* whether the city has anything on screen yet */
+  const [built, setBuilt] = useState(false);
 
   /* The storey the camera is level with. The tour reports it as it rides up
      and down the building; pointing at one overrides it. */
@@ -246,6 +290,7 @@ export default function App() {
   return (
     <div className={`site view-${view.kind}`}>
       <Boot />
+      <Loading done={built} />
 
       {/* the world, behind everything */}
       <div className={`stage-layer ${hoverId ? "is-pointing" : ""}`}>
@@ -265,6 +310,7 @@ export default function App() {
                 setFeatured(i);
                 setPick((cur) => (cur === i ? cur : null));
               }}
+              onBuilt={() => setBuilt(true)}
             />
           </Suspense>
         </StageBoundary>
