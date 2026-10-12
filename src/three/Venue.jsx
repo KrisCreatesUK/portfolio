@@ -40,8 +40,11 @@ export const VENUE_SCALE = 1.25;
 const SCREEN = {
   /* a board over the roof rather than a panel on the wall: three games
      at once need the width, and a casino would put it up there anyway */
-  casino: { at: [0, 14.6, 1.7], size: [12.8, 7.2] },
-  depot: { at: [0, 5.1, -1.05], size: [6.4, 3.6] },
+  casino: { at: [0, 14.6, 1.84], size: [12.8, 7.2] },
+  /* Out at the front on a board, the way a services tells you what is
+     here before you have pulled in. Under the canopy it was a panel on a
+     back wall that you only saw once you had arrived. */
+  depot: { at: [-1.4, 8.6, 6.62], size: [11.5, 6.47] },
   /* Pokellectr is a phone, so the moving picture is on a phone: a display
      unit out on the forecourt at the height of the shop, running one of the
      cuts. The board over the roof carries the store listing instead, and the
@@ -434,8 +437,8 @@ function Casino({ accent }) {
       ))}
 
       {/* what it plugs into, over the door where you cannot miss it */}
-      <mesh position={[0, 6.4, 3.24]}>
-        <planeGeometry args={[7.4, 1.49]} />
+      <mesh position={[0, 6.7, 3.24]}>
+        <planeGeometry args={[6.9, 2.21]} />
         <meshBasicMaterial map={plugs} transparent toneMapped={false} />
       </mesh>
 
@@ -539,6 +542,43 @@ function Depot({ accent }) {
         )}
       </group>
 
+      {/* The information board. Two posts, a deep frame and a header
+          strip, out on the edge of the forecourt facing the traffic. */}
+      <group position={[-1.4, 0, 6.1]}>
+        {[-1, 1].map((side) => (
+          <mesh key={side} position={[side * 4.4, 2.8, 0]} castShadow>
+            <boxGeometry args={[0.7, 5.6, 0.7]} />
+            <meshStandardMaterial {...pale} />
+          </mesh>
+        ))}
+        <mesh position={[0, 8.6, 0]}>
+          <boxGeometry args={[12.3, 7.3, 0.7]} />
+          <meshStandardMaterial {...dark} />
+        </mesh>
+        <mesh position={[0, 8.6, 0.33]}>
+          <boxGeometry args={[11.9, 6.9, 0.1]} />
+          <meshStandardMaterial color="#05090a" roughness={0.4} metalness={0.5} />
+        </mesh>
+        {/* the header strip, lit */}
+        <mesh position={[0, 12.5, 0.2]}>
+          <boxGeometry args={[12.3, 0.8, 0.5]} />
+          <meshStandardMaterial {...pale} />
+        </mesh>
+        <mesh position={[0, 12.5, 0.47]}>
+          <planeGeometry args={[11.9, 0.52]} />
+          <meshBasicMaterial color={accent} transparent opacity={0.75} toneMapped={false} />
+        </mesh>
+        <Bulbs
+          count={12}
+          from={[-5.5, 12.95, 0.3]}
+          to={[5.5, 12.95, 0.3]}
+          colour={accent}
+          radius={0.08}
+          speed={1.3}
+        />
+        <pointLight position={[0, 8.6, 5]} color={accent} intensity={24} distance={24} />
+      </group>
+
       {/* the totem out by the road */}
       <mesh position={[-6.6, 4.2, 0]}>
         <boxGeometry args={[0.45, 8.4, 0.45]} />
@@ -568,7 +608,7 @@ function Shop({ accent }) {
     "/shots/pokellectr-store.webp",
     "/shots/pokellectr-win1.webp",
     "/shots/pokellectr-win2.webp",
-    "/badges/on-google-play.webp",
+    "/badges/google-play.png",
   ]);
 
   return (
@@ -649,9 +689,10 @@ function Shop({ accent }) {
         <pointLight position={[0, 6.9, 4]} color={accent} intensity={20} distance={20} />
       </group>
 
-      {/* where to get it */}
+      {/* where to get it. The badge is used exactly as Google supplies it,
+          which is the only way it is allowed to be used. */}
       <mesh position={[-3.1, 1.5, 2.74]}>
-        <planeGeometry args={[2.5, 1.03]} />
+        <planeGeometry args={[2.72, 1.05]} />
         <meshBasicMaterial map={play} transparent toneMapped={false} />
       </mesh>
 
