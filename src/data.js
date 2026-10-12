@@ -185,7 +185,7 @@ export const projects = [
     clip: "/clips/clippd.mp4",
     clipSm: "/clips/clippd-sm.mp4",
     poster: "/clips/clippd.webp",
-    venue: "cinema",
+    venue: "factory",
     index: "04",
     code: "NO_04",
     name: "ClippD",

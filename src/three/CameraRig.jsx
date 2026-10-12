@@ -15,6 +15,7 @@ import {
   roadAt,
   venueAt,
   venueFacing,
+  venueOutside,
   venueS,
 } from "./layout";
 
@@ -538,9 +539,15 @@ export default function CameraRig({
        standing in front of the frontage looking straight at it, so the crane
        is wound back out as it goes — otherwise the two would double up. */
     const yaw = lookAt < 0 ? HQ_FACING : venueFacing(lookAt);
+    /* The two frontages inside the block face back across the road, so
+       squaring up with one puts the camera on the far side of it — with the
+       kerb and a row of lamp standards between the lens and the building.
+       Rising above them is what clears the shot; standing closer instead
+       would not fit the taller frontages in. */
+    const inside = lookAt < 0 || !venueOutside(lookAt);
     _front.set(
       _stop.x + Math.sin(yaw) * STANDOFF,
-      st.eye,
+      st.eye + (inside ? 5 : 0),
       _stop.z + Math.cos(yaw) * STANDOFF
     );
     const swing = mode === "project" ? 0 : glance * SWING;

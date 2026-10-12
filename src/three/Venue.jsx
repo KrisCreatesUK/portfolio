@@ -17,7 +17,7 @@ import { isTap } from "./gesture";
      casino   CompKit      marquee, chaser bulbs, big board
      depot    Truck It     forecourt canopy, pumps, totem
      shop     Pokellectr   small card shop, awning, window
-     cinema   ClippD       blade sign, marquee, poster wall
+     factory  ClippD       a line: long in one end, shorts out
 
    What is shared: the forecourt they stand on, the ground
    ring that pulses when a venue is the live one, the lit
@@ -51,7 +51,12 @@ const SCREEN = {
      windows have the app in them — three things saying the same thing in the
      three ways anyone meets it. */
   shop: { at: [5.4, 6.9, 4.78], size: [3.9, 6.93] },
-  cinema: { at: [0, 8.8, 3.08], size: [6.8, 4.3] },
+  /* The source, at the start of the line. ClippD was a cinema, which was
+     the wrong idea twice over: a cinema is about watching something, and
+     the facade carried nothing you could read going past. A line can be
+     read in one look — the long thing goes in that end, the short ones
+     come out the other. */
+  factory: { at: [-3.5, 9.3, 1.35], size: [8.6, 4.84] },
 };
 
 /* and where the logo sign goes */
@@ -60,7 +65,7 @@ const SIGN = {
   casino: { at: [0, 4.4, 6.08], size: [7.4, 1.9] },
   depot: { at: [-6.6, 8.4, 0], size: [4.4, 2.8], turn: 0 },
   shop: { at: [0, 6.3, 2.3], size: [5, 1.6] },
-  cinema: { at: [-4.3, 10.2, 2.85], size: [2.5, 6.4] },
+  factory: { at: [-3.5, 13.1, 1.25], size: [5.6, 1.64] },
 };
 
 /* =========================================================
@@ -367,7 +372,7 @@ export default function Venue({ project, kind, position, facing, featured, onSel
       {kind === "casino" && <Casino accent={accent} />}
       {kind === "depot" && <Depot accent={accent} />}
       {kind === "shop" && <Shop accent={accent} />}
-      {kind === "cinema" && <Cinema accent={accent} />}
+      {kind === "factory" && <Factory accent={accent} project={project} />}
 
       {/* the product itself, up on the building's own screen */}
       <group position={screenAt}>
@@ -579,11 +584,36 @@ function Depot({ accent }) {
         <pointLight position={[0, 8.6, 5]} color={accent} intensity={24} distance={24} />
       </group>
 
-      {/* the totem out by the road */}
-      <mesh position={[-6.6, 4.2, 0]}>
-        <boxGeometry args={[0.45, 8.4, 0.45]} />
-        <meshStandardMaterial {...dark} />
+      {/* The totem out by the road, as a lightbox: a lit panel behind the
+          name with a frame round it and a lamp on it, the way a services
+          sign is lit rather than merely being a sign in the dark. */}
+      {[-1, 1].map((side) => (
+        <mesh key={side} position={[-6.6 + side * 1.5, 4.2, 0]}>
+          <boxGeometry args={[0.4, 8.4, 0.4]} />
+          <meshStandardMaterial {...dark} />
+        </mesh>
+      ))}
+      <mesh position={[-6.6, 8.4, 0]}>
+        <boxGeometry args={[5.4, 3.8, 0.7]} />
+        <meshStandardMaterial {...pale} />
       </mesh>
+      <mesh position={[-6.6, 8.4, 0.37]}>
+        <planeGeometry args={[5.1, 3.5]} />
+        <meshBasicMaterial color={accent} transparent opacity={0.4} toneMapped={false} />
+      </mesh>
+      <mesh position={[-6.6, 8.4, -0.37]} rotation={[0, Math.PI, 0]}>
+        <planeGeometry args={[5.1, 3.5]} />
+        <meshBasicMaterial color={accent} transparent opacity={0.4} toneMapped={false} />
+      </mesh>
+      <Bulbs
+        count={9}
+        from={[-9.2, 10.5, 0.1]}
+        to={[-4, 10.5, 0.1]}
+        colour={accent}
+        radius={0.08}
+        speed={1.2}
+      />
+      <pointLight position={[-6.6, 8.4, 3]} color={accent} intensity={22} distance={18} />
 
       {/* a lit edge along the forecourt, like a kerb */}
       <Bulbs
@@ -807,6 +837,132 @@ function Reel({ accent, position, speed = 1 }) {
         <meshBasicMaterial color={accent} transparent opacity={0.8} toneMapped={false} />
       </mesh>
     </group>
+  );
+}
+
+/* =========================================================
+   ClippD — the line
+   ---------------------------------------------------------
+   A long low shed with a sawtooth roof. At one end the source
+   goes in, on a screen the size of the wall. Along the front
+   a belt runs, carrying it to the other end, where four
+   vertical panels stand in a rack: the shorts that came out.
+   A mast over the output end, flashing, because the last
+   thing it does is publish them.
+
+   Everything about it is meant to be read at the speed you
+   go past: big screen one side, row of phone-shaped screens
+   the other, something visibly moving between the two.
+   ========================================================= */
+function Factory({ accent, project }) {
+  const outs = useTexture([
+    "/shots/clippd-out1.webp",
+    "/shots/clippd-out2.webp",
+    "/shots/clippd-out3.webp",
+    "/shots/clippd-out4.webp",
+  ]);
+
+  return (
+    <group>
+      {/* the shed */}
+      <RoundedBox args={[16, 5.6, 7]} radius={0.1} smoothness={3} position={[0, 2.8, 0]} castShadow>
+        <meshStandardMaterial {...stone} />
+      </RoundedBox>
+
+      {/* sawtooth roof: the one silhouette that says works rather than shop */}
+      {[-6, -3, 0, 3, 6].map((x) => (
+        <group key={x} position={[x, 5.6, 0]}>
+          <mesh position={[0, 0.75, -0.6]} rotation={[0, 0, Math.PI / 4]}>
+            <boxGeometry args={[1.5, 1.5, 7]} />
+            <meshStandardMaterial {...pale} />
+          </mesh>
+          <mesh position={[0.52, 1.15, 1.5]} rotation={[0, 0, -0.78]}>
+            <planeGeometry args={[1.5, 6.9]} />
+            <meshBasicMaterial color={accent} transparent opacity={0.22} toneMapped={false} />
+          </mesh>
+        </group>
+      ))}
+
+      {/* the gantry the source screen hangs on */}
+      <mesh position={[-3.5, 9.3, 1.05]}>
+        <boxGeometry args={[9.4, 5.6, 0.5]} />
+        <meshStandardMaterial {...dark} />
+      </mesh>
+      {[-1, 1].map((side) => (
+        <mesh key={side} position={[-3.5 + side * 4.3, 7.4, 0.8]}>
+          <boxGeometry args={[0.45, 4, 0.45]} />
+          <meshStandardMaterial {...pale} />
+        </mesh>
+      ))}
+
+      {/* IN and OUT, as a belt running the length of the front */}
+      <Film accent={accent} y={6.5} z={3.62} width={15.4} height={1.25} speed={0.2} />
+
+      {/* what comes off it: four shorts in a rack */}
+      {outs.map((tex, i) => {
+        const x = 2.1 + i * 1.95;
+        return (
+          <group key={x} position={[x, 2.9, 3.68]} rotation={[0, -0.12 * (i - 1.5), 0]}>
+            <mesh position={[0, 0, -0.08]}>
+              <boxGeometry args={[1.78, 3.2, 0.16]} />
+              <meshStandardMaterial color="#12181d" metalness={0.7} roughness={0.4} />
+            </mesh>
+            <mesh>
+              <planeGeometry args={[1.6, 2.85]} />
+              <meshBasicMaterial map={tex} toneMapped={false} />
+            </mesh>
+            <lineSegments position={[0, 0, 0.02]} raycast={() => null}>
+              <edgesGeometry args={[new THREE.PlaneGeometry(1.6, 2.85)]} />
+              <lineBasicMaterial color={accent} transparent opacity={0.75} />
+            </lineSegments>
+            <mesh position={[0, -1.76, 0]}>
+              <boxGeometry args={[1.8, 0.14, 0.5]} />
+              <meshStandardMaterial {...pale} />
+            </mesh>
+          </group>
+        );
+      })}
+
+      {/* the mast over the output end, flashing: the last thing it does is
+          put them out */}
+      <mesh position={[8.4, 8, 0]}>
+        <cylinderGeometry args={[0.16, 0.24, 11, 8]} />
+        <meshStandardMaterial {...dark} />
+      </mesh>
+      <Beacon accent={accent} position={[8.4, 13.7, 0]} />
+      {[0, 1, 2].map((i) => (
+        <mesh key={i} position={[8.4, 10.4 + i * 1.1, 0]} rotation={[-Math.PI / 2, 0, 0]}>
+          <torusGeometry args={[0.7 - i * 0.16, 0.05, 6, 20]} />
+          <meshBasicMaterial color={accent} transparent opacity={0.55} toneMapped={false} />
+        </mesh>
+      ))}
+
+      {/* the doors */}
+      <mesh position={[-3.5, 1.9, 3.53]}>
+        <planeGeometry args={[5, 3.4]} />
+        <meshBasicMaterial color={accent} transparent opacity={0.14} toneMapped={false} />
+      </mesh>
+
+      <pointLight position={[0, 7, 8]} color={accent} intensity={26} distance={28} />
+      <group visible={false}>{project.id}</group>
+    </group>
+  );
+}
+
+/* a light on top of the mast, on the half-second */
+function Beacon({ accent, position }) {
+  const ref = useRef();
+  useFrame((state) => {
+    if (!ref.current) return;
+    const p = (state.clock.elapsedTime * 0.8) % 1;
+    ref.current.material.opacity = 0.2 + Math.pow(1 - p, 4) * 0.8;
+  });
+
+  return (
+    <mesh ref={ref} position={position}>
+      <sphereGeometry args={[0.42, 12, 12]} />
+      <meshBasicMaterial color={accent} transparent opacity={0.6} toneMapped={false} />
+    </mesh>
   );
 }
 
