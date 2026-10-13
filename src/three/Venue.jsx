@@ -63,7 +63,7 @@ const SCREEN = {
 const SIGN = {
   /* which puts the name down on the canopy, where a marquee goes */
   casino: { at: [0, 4.4, 6.08], size: [7.4, 1.9] },
-  depot: { at: [-6.6, 8.4, 0], size: [4.4, 2.8], turn: 0 },
+  depot: { at: [5.9, 7.6, 5.4], size: [5.4, 2.3], turn: 0 },
   shop: { at: [0, 6.3, 2.3], size: [5, 1.6] },
   factory: { at: [-3.5, 13.1, 1.25], size: [5.6, 1.64] },
 };
@@ -588,32 +588,37 @@ function Depot({ accent }) {
           name with a frame round it and a lamp on it, the way a services
           sign is lit rather than merely being a sign in the dark. */}
       {[-1, 1].map((side) => (
-        <mesh key={side} position={[-6.6 + side * 1.5, 4.2, 0]}>
-          <boxGeometry args={[0.4, 8.4, 0.4]} />
+        <mesh key={side} position={[5.9 + side * 1.5, 3.8, 5.4]}>
+          <boxGeometry args={[0.4, 7.6, 0.4]} />
           <meshStandardMaterial {...dark} />
         </mesh>
       ))}
-      <mesh position={[-6.6, 8.4, 0]}>
-        <boxGeometry args={[5.4, 3.8, 0.7]} />
+      {/* The box goes BEHIND the name, not around it. Built around it, the
+          name was inside a solid body and a lit face was drawn over the
+          front of it — so the one thing the sign exists to show was the one
+          thing you could not see. The lit panel is a size larger than the
+          name so it reads as a border round it. */}
+      <mesh position={[5.9, 7.6, 4.78]}>
+        <boxGeometry args={[6.4, 3.4, 0.5]} />
         <meshStandardMaterial {...pale} />
       </mesh>
-      <mesh position={[-6.6, 8.4, 0.37]}>
-        <planeGeometry args={[5.1, 3.5]} />
-        <meshBasicMaterial color={accent} transparent opacity={0.4} toneMapped={false} />
+      <mesh position={[5.9, 7.6, 5.06]}>
+        <planeGeometry args={[6.1, 3.1]} />
+        <meshBasicMaterial color={accent} transparent opacity={0.45} toneMapped={false} />
       </mesh>
-      <mesh position={[-6.6, 8.4, -0.37]} rotation={[0, Math.PI, 0]}>
-        <planeGeometry args={[5.1, 3.5]} />
-        <meshBasicMaterial color={accent} transparent opacity={0.4} toneMapped={false} />
+      <mesh position={[5.9, 7.6, 4.5]} rotation={[0, Math.PI, 0]}>
+        <planeGeometry args={[6.1, 3.1]} />
+        <meshBasicMaterial color={accent} transparent opacity={0.45} toneMapped={false} />
       </mesh>
       <Bulbs
         count={9}
-        from={[-9.2, 10.5, 0.1]}
-        to={[-4, 10.5, 0.1]}
+        from={[3.0, 9.5, 5.1]}
+        to={[8.8, 9.5, 5.1]}
         colour={accent}
         radius={0.08}
         speed={1.2}
       />
-      <pointLight position={[-6.6, 8.4, 3]} color={accent} intensity={22} distance={18} />
+      <pointLight position={[5.9, 7.6, 8]} color={accent} intensity={22} distance={18} />
 
       {/* a lit edge along the forecourt, like a kerb */}
       <Bulbs
