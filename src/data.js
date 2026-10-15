@@ -284,5 +284,4 @@ export const links = [
   { label: "LinkedIn", href: "https://www.linkedin.com/in/kriscreatesuk/", tag: "in" },
   { label: "Upwork", href: "https://www.upwork.com/freelancers/~015ddc5bd348bef361", tag: "Up" },
   { label: "Fiverr", href: "https://www.fiverr.com/sellers/webbodevvo/", tag: "fi" },
-  { label: "PeoplePerHour", href: "https://www.peopleperhour.com/freelancer/design/kris-sull-custom-wordpress-woocommerce-zxymyqwm", tag: "PPH" },
 ];
