@@ -528,8 +528,13 @@ function Depot({ accent }) {
         </group>
       ))}
 
-      {/* a trailer parked up on the right */}
-      <group position={[9.2, 0.5, 2.4]} rotation={[0, -0.35, 0]}>
+      {/* A trailer parked up off the right-hand edge of the forecourt.
+          It used to stand at x 9.2, which put the right-hand totem post
+          straight through the box — the pole came out the top of the
+          trailer and the whole sign read as a modelling fault. It is out
+          past the totem now, and down on the ground rather than up at
+          forecourt height, because it is parked beside the pad not on it. */}
+      <group position={[11.8, 0, 0.6]} rotation={[0, -0.42, 0]}>
         <RoundedBox args={[3.1, 3.1, 8.4]} radius={0.1} smoothness={3} position={[0, 2.5, 0]} castShadow>
           <meshStandardMaterial {...pale} />
         </RoundedBox>
@@ -587,8 +592,13 @@ function Depot({ accent }) {
       {/* The totem out by the road, as a lightbox: a lit panel behind the
           name with a frame round it and a lamp on it, the way a services
           sign is lit rather than merely being a sign in the dark. */}
+      {/* The posts stand OUTSIDE the name and a little behind it. They used
+          to be 1.5 either side of centre at the same depth as the logo,
+          which put a black bar straight down through "It" and "LETS PARK" —
+          the name was drawn and then a post was drawn over the top of it.
+          Out at 3.2 they frame the lightbox instead of crossing it. */}
       {[-1, 1].map((side) => (
-        <mesh key={side} position={[5.9 + side * 1.5, 3.8, 5.4]}>
+        <mesh key={side} position={[5.9 + side * 3.2, 3.8, 4.78]}>
           <boxGeometry args={[0.4, 7.6, 0.4]} />
           <meshStandardMaterial {...dark} />
         </mesh>

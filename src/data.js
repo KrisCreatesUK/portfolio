@@ -23,7 +23,7 @@ export const profile = {
 export const counters = [
   { value: profile.yearsBuilding, suffix: "+", label: "Years coding", sub: "Self-taught" },
   { value: 4, suffix: "", label: "Runtimes shipped", sub: "PHP · Python · Native" },
-  { value: 8, suffix: "", label: "Game modules live", sub: "CompKit premium" },
+  { value: 9, suffix: "", label: "Game modules live", sub: "CompKit premium" },
   { value: 11, suffix: "", label: "Products shipped", sub: "All still in service" },
 ];
 
@@ -52,16 +52,16 @@ export const projects = [
     status: "Live",
     statusTone: "live",
     year: "2025 — present",
-    version: "v3.0.71",
+    version: "v3.0.81",
     blurb:
-      "A WooCommerce plugin suite that turns the instant-win result on an order confirmation page into a game the customer plays — scratch, spin, slots, claw, darts, race, balloon pop or shootout.",
+      "A WooCommerce plugin suite that turns the instant-win result on an order confirmation page into a game the customer plays — scratch, spin, slots, claw, darts, race, balloon pop, shootout or a typing fight.",
     body: [
       "The free core is a full plugin in its own right: it hooks WooCommerce order completion, renders the reveal on the confirmation page, and holds back the confirmation email until every ticket has been played — otherwise the inbox spoils the result before the customer even lands on the page.",
-      "On top sit eight premium game modules, each an HTML5 canvas engine licensed separately at £9.99 a month. Every module has its own admin settings page with a live device-emulating preview, global defaults with per-product overrides and a 'Use Global' fallback, and theme files — one JSON that re-skins a game from Galaxy Grab to Candy Catcher, importable at either level. Artwork is uploadable down to the trackside advertising boards inside the race track.",
+      "On top sit nine premium game modules, each an HTML5 canvas engine licensed separately at £9.99 a month. Every module has its own admin settings page with a live device-emulating preview, global defaults with per-product overrides and a 'Use Global' fallback, and theme files — one JSON that re-skins a game from Galaxy Grab to Candy Catcher, importable at either level. Artwork is uploadable down to the trackside advertising boards inside the race track.",
       "The commercial side is mine too. A licence server validates subscriptions and serves every game engine remotely — nothing ships in the zip, so a stripped licence check leaves a plugin with no games in it. It builds white-label cores on demand for agencies, drives in-dashboard auto-updates, and stages every release to the demo sites first: customers only see a version once it's been played through and published from the vault.",
     ],
     highlights: [
-      "8 premium canvas game engines, every one re-skinnable",
+      "9 premium canvas game engines, every one re-skinnable",
       "Licence API with remote engine delivery — no code in the zip",
       "Smart Email Delay Handler stops spoiler emails",
       "Live admin preview with device emulation",

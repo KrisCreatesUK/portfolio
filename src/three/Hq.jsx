@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useFrame } from "@react-three/fiber";
 import { RoundedBox, useTexture } from "@react-three/drei";
 import * as THREE from "three";
@@ -17,21 +17,31 @@ import { FLOOR_H, TOWER_W, TOWER_D, floorY, towerTop } from "./layout";
    and you see the product; press it and you are flown out
    to that product's own place on the map.
 
-   The storeys above the projects are offices with the lights
-   half on. The ground floor is a reception: press it and you
-   get the business end of the place — who you are dealing
-   with, what this site does and does not do, and where the
-   products' own policies live. All the things that would
-   otherwise be set in six point at the bottom of a page.
+   The storeys above the projects used to be anonymous
+   offices with the lights half on, which made the top third
+   of the landmark say nothing. They are the business end of
+   the place now, one subject to a floor and named on all
+   four sides the way a directory board names them: how to
+   reach someone, who they are, and where the small print
+   lives. Press any of them — or the reception at the bottom
+   — and you get the page. All the things that would
+   otherwise be set in six point at the foot of a page, given
+   a floor each instead.
    ========================================================= */
 
 const shell = { color: "#0c1513", roughness: 0.42, metalness: 0.7 };
 const dark = { color: "#070d0c", roughness: 0.55, metalness: 0.5 };
 
-const SPARE_FLOORS = 3;
-const WIN_H = FLOOR_H - 1.05;
+/* Read bottom-up, so looking up the building from the street is reading
+   down a directory board: the way to reach someone first, then who they
+   are, then the small print. */
+const OFFICE_FLOORS = [
+  { key: "contact", name: "CONTACT", sub: "OPEN TO WORK" },
+  { key: "company", name: "COMPANY", sub: "WHO YOU ARE DEALING WITH" },
+  { key: "policies", name: "POLICIES", sub: "TERMS  ·  PRIVACY" },
+];
 
-/* windows that are lit, dim, or out — a building with people in it */
+const WIN_H = FLOOR_H - 1.05;
 /* A storey with a product in it: the same glazed box, but the window on
    every face is that product's screen, and the whole floor takes the click. */
 function ProjectStorey({ y, project, featured, onSelect, onHover }) {
@@ -122,18 +132,58 @@ function facesOf() {
   ];
 }
 
-function Storey({ y, seed }) {
-  const panes = useMemo(() => {
-    let a = (seed * 9301 + 49297) % 233280;
-    const rnd = () => ((a = (a * 9301 + 49297) % 233280) / 233280);
-    /* bright enough to read as a lit building from across the map */
-    return [0, 1, 2, 3].map(() => 0.18 + rnd() * 0.5);
-  }, [seed]);
+/* A storey with a subject in it rather than a product. The window on every
+   face carries the floor's name, so whichever way the camera has flown
+   round there is always a readable one pointing at you — the same reason
+   the project floors are glazed on four sides.
+
+   The lettering is drawn at a constant pixels-per-unit rather than a
+   constant canvas size: the two faces of the slab are different widths,
+   and a fixed canvas made the word noticeably larger on the narrow side. */
+function OfficeStorey({ y, floor, active, onOpen, onHover }) {
+  const panes = useRef([]);
+  const words = useRef([]);
 
   const faces = facesOf();
 
+  const maps = useMemo(
+    () =>
+      faces.map((f) =>
+        labelTexture(
+          [
+            { text: floor.name, size: 54, color: "#e4ffc4", spacing: 10 },
+            { text: floor.sub, size: 20, color: "#8fc46a", spacing: 4 },
+          ],
+          { width: Math.round(f.w * 150), height: Math.round(WIN_H * 150), align: "center" }
+        )
+      ),
+    [faces, floor]
+  );
+
+  useFrame((state, delta) => {
+    const dt = Math.min(delta, 0.05);
+    panes.current.forEach((m) => {
+      if (m) m.opacity = THREE.MathUtils.damp(m.opacity, active ? 0.34 : 0.17, 4, dt);
+    });
+    words.current.forEach((m) => {
+      if (m) m.opacity = THREE.MathUtils.damp(m.opacity, active ? 1 : 0.72, 4, dt);
+    });
+  });
+
   return (
-    <group position={[0, y, 0]}>
+    <group
+      position={[0, y, 0]}
+      onClick={(e) => {
+        if (!isTap()) return;
+        e.stopPropagation();
+        onOpen?.();
+      }}
+      onPointerOver={(e) => {
+        e.stopPropagation();
+        onHover?.(floor.key);
+      }}
+      onPointerOut={() => onHover?.(null)}
+    >
       <RoundedBox args={[TOWER_W, FLOOR_H - 0.08, TOWER_D]} radius={0.06} smoothness={3} castShadow>
         <meshStandardMaterial {...shell} />
       </RoundedBox>
@@ -147,16 +197,37 @@ function Storey({ y, seed }) {
 
       {faces.map((f, i) => (
         <group key={f.key} position={f.pos} rotation={f.rot}>
+          {/* the lit floor behind the lettering */}
           <mesh>
             <planeGeometry args={[f.w, WIN_H]} />
-            <meshBasicMaterial color="#9ad84a" transparent opacity={panes[i]} toneMapped={false} />
+            <meshBasicMaterial
+              ref={(m) => (panes.current[i] = m)}
+              color="#9ad84a"
+              transparent
+              opacity={0.17}
+              toneMapped={false}
+            />
           </mesh>
-          {[-0.3, 0, 0.3].map((o) => (
-            <mesh key={o} position={[f.w * o, 0, 0.006]}>
-              <planeGeometry args={[0.03, WIN_H]} />
-              <meshBasicMaterial color="#060c0b" transparent opacity={0.85} />
-            </mesh>
-          ))}
+
+          {/* the name, blended additively so it burns through the glass
+              rather than sitting on it as a flat decal */}
+          <mesh position={[0, 0, 0.008]} raycast={() => null}>
+            <planeGeometry args={[f.w, WIN_H]} />
+            <meshBasicMaterial
+              ref={(m) => (words.current[i] = m)}
+              map={maps[i]}
+              transparent
+              opacity={0.72}
+              toneMapped={false}
+              depthWrite={false}
+              blending={THREE.AdditiveBlending}
+            />
+          </mesh>
+
+          <lineSegments position={[0, 0, 0.012]} raycast={() => null}>
+            <edgesGeometry args={[new THREE.PlaneGeometry(f.w, WIN_H)]} />
+            <lineBasicMaterial color="#93F025" transparent opacity={active ? 0.8 : 0.25} />
+          </lineSegments>
         </group>
       ))}
     </group>
@@ -307,7 +378,13 @@ function Floodlights({ top, lite }) {
 }
 
 export default function Hq({ lite, projects, featuredId, onSelect, onHover, onOffice }) {
-  const floors = projects.length + SPARE_FLOORS;
+  /* Kept local on purpose rather than going through onHover: that one
+     decides which frontage out on the street is live, and a floor of head
+     office is not one of them — routing it through there unfeatured every
+     venue on the map the moment the pointer crossed the tower. */
+  const [officeHover, setOfficeHover] = useState(null);
+
+  const floors = projects.length + OFFICE_FLOORS.length;
   const top = towerTop(floors);
 
   const boardTex = useMemo(
@@ -315,7 +392,7 @@ export default function Hq({ lite, projects, featuredId, onSelect, onHover, onOf
       labelTexture(
         [
           { text: "HEAD OFFICE", size: 34, color: "#cfe9c0", spacing: 9 },
-          { text: "CONTACT  ·  COMPANY  ·  POLICIES", size: 22, color: "#7f9b8e", spacing: 4 },
+          { text: "RECEPTION", size: 22, color: "#7f9b8e", spacing: 4 },
         ],
         { width: 1024, height: 256 }
       ),
@@ -409,8 +486,16 @@ export default function Hq({ lite, projects, featuredId, onSelect, onHover, onOf
       ))}
 
       {/* offices above, with the lights half on */}
-      {Array.from({ length: SPARE_FLOORS }, (_, i) => (
-        <Storey key={`spare-${i}`} y={floorY(projects.length + i)} seed={i + 3} />
+      {/* and the business end above them, a subject to a floor */}
+      {OFFICE_FLOORS.map((f, i) => (
+        <OfficeStorey
+          key={f.key}
+          y={floorY(projects.length + i)}
+          floor={f}
+          active={officeHover === f.key}
+          onOpen={onOffice}
+          onHover={setOfficeHover}
+        />
       ))}
 
       <group position={[0, top + 0.3, 0]}>

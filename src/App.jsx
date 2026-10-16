@@ -518,8 +518,8 @@ export default function App() {
                 <span className="deck-code">HEAD OFFICE</span>
                 <span className="deck-seq">OPEN TO WORK</span>
               </div>
-              <h1 className="deck-title glitch" id="contact-title" data-text="Head office">
-                Head office
+              <h1 className="deck-title glitch" id="contact-title" data-text="Contact">
+                Contact
               </h1>
               <p className="deck-blurb">
                 Got a system that needs building, finishing or rescuing? Send the detail
@@ -595,7 +595,7 @@ export default function App() {
         <span>
           © {new Date().getFullYear()} {office.company} trading as {profile.handle} ·{" "}
           <button className="foot-link" onClick={() => openPage("contact")}>
-            Head office
+            Contact
           </button>
         </span>
         <span className="foot-mid">
@@ -650,7 +650,7 @@ function Header({ view, onHome, onPage, backLabel }) {
           className={view.kind === "page" && view.id === "contact" ? "is-on" : ""}
           onClick={() => onPage("contact")}
         >
-          Head office
+          Contact
         </button>
         <a
           className="nav-out"
