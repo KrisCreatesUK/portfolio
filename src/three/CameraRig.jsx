@@ -199,6 +199,7 @@ export default function CameraRig({
     glance: 0,                  // how far the head is turned to a frontage
     featured: -1,
     hold: 0,                    // seconds left sitting outside a pick
+    dir: 1,                     // 1 up the street, -1 in reverse
     stop: null,                 // what the guide is talking about
   });
 
@@ -418,6 +419,10 @@ export default function CameraRig({
           st.idle = 0;
           st.hold = 0;
         }
+        /* the way you asked to go, not the way you are still drifting: a
+           press of back flips what counts as coming up at once, rather than
+           after the craft has slowed through zero */
+        if (want) st.dir = want < 0 ? -1 : 1;
         /* eased rather than switched, so a press is a surge and a release
            settles back into the tour instead of lurching */
         st.speed = damp(st.speed, want * pace, input.climb ? 3 : 1.6, dt);
@@ -441,7 +446,7 @@ export default function CameraRig({
        have already gone past counts double, so the bar stays on what is in
        front of you rather than flicking back as you clear a frontage. In
        reverse, "in front" is the other way. */
-    const ahead = st.speed < -0.5 ? -1 : 1;
+    const ahead = mode === "project" ? 1 : st.dir;
     let nearest = 0;
     let best = Infinity;
     for (let i = 0; i < total; i++) {
