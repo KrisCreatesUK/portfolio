@@ -344,12 +344,17 @@ function Floodlights({ top, lite }) {
             opacity={0.085}
           />
 
-          <Spot
-            position={[u.x, 0.35, u.z]}
-            aim={[u.x * 0.1, top * 0.55, u.z * 0.1]}
-            colour="#cdffa0"
-            intensity={lite ? 28 : 52}
-          />
+          {/* Only the two on the street side actually throw light. The tour
+              passes the front of the building; the back pair cost as much
+              as the front pair on every frame and were barely ever seen. */}
+          {u.z > 0 && (
+            <Spot
+              position={[u.x, 0.35, u.z]}
+              aim={[u.x * 0.1, top * 0.55, u.z * 0.1]}
+              colour="#cdffa0"
+              intensity={lite ? 28 : 52}
+            />
+          )}
         </group>
       ))}
 
@@ -465,12 +470,9 @@ export default function Hq({ lite, projects, featuredId, onSelect, onHover, onOf
           <meshBasicMaterial map={boardTex} transparent toneMapped={false} />
         </mesh>
 
-        <pointLight
-          position={[0, 1.6, TOWER_D / 2 + 2.4]}
-          color="#93F025"
-          intensity={14}
-          distance={10}
-        />
+        {/* No light of its own at the door any more. Every light in the
+            scene is paid for by every lit pixel on screen, wherever it is,
+            and this one only ever reached the canopy. */}
       </group>
 
       {/* the products, lowest number at the bottom */}
@@ -537,7 +539,6 @@ function RoofSign() {
   const tex = useTexture("/kriscreates-logo-green.png");
   const faces = useRef([]);
   const halos = useRef([]);
-  const light = useRef();
   const flick = useRef({ next: 5, burst: 0, level: 1 });
 
   /* A solid box with a face on each side, not crossed planes — two planes
@@ -578,7 +579,6 @@ function RoofSign() {
 
     faces.current.forEach((m) => m && (m.opacity = f.level));
     halos.current.forEach((m) => m && (m.opacity = 0.28 * f.level));
-    if (light.current) light.current.intensity = 5 + f.level * 7;
   });
 
   return (
@@ -633,8 +633,9 @@ function RoofSign() {
           </mesh>
         </group>
       ))}
-
-      <pointLight ref={light} position={[0, 0, 0]} color="#93F025" intensity={9} distance={12} />
+      {/* The faces are additive and light themselves; the point light that
+          used to sit in here only washed the roof, at the cost of a light
+          evaluated on every surface in the city. */}
     </group>
   );
 }

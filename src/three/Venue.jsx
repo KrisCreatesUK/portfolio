@@ -117,6 +117,35 @@ function Bulbs({ count, from, to, colour, radius = 0.09, speed = 1.6 }) {
   );
 }
 
+/* =========================================================
+   A LIGHT THAT ONLY THE LIVE FRONTAGE GETS
+   ---------------------------------------------------------
+   Every light in the scene is worked out on every lit pixel
+   on screen, however far away it is. Four buildings with two
+   or three lights each, plus head office, came to nineteen,
+   and that was what made the street crawl on a desktop.
+
+   So a venue's own lights exist only while it is the one you
+   are coming up on. Exactly one venue is live at a time and
+   each carries exactly two, so the number of lights never
+   changes — which matters, because a change in that number
+   makes three rebuild every material in the city at once.
+   They come up from dark rather than snapping on.
+   ========================================================= */
+function Lamp({ intensity, ...props }) {
+  const ref = useRef();
+  useFrame((_, delta) => {
+    if (!ref.current) return;
+    ref.current.intensity = THREE.MathUtils.damp(
+      ref.current.intensity,
+      intensity,
+      3,
+      Math.min(delta, 0.05)
+    );
+  });
+  return <pointLight ref={ref} intensity={0} {...props} />;
+}
+
 /* A lit panel carrying the product's own logo. Three layers: a dark backing
    so it reads as a physical sign, the mark itself, and an oversized copy
    blended additively standing in for bloom. */
@@ -369,10 +398,10 @@ export default function Venue({ project, kind, position, facing, featured, onSel
         />
       </mesh>
 
-      {kind === "casino" && <Casino accent={accent} />}
-      {kind === "depot" && <Depot accent={accent} />}
-      {kind === "shop" && <Shop accent={accent} />}
-      {kind === "factory" && <Factory accent={accent} project={project} />}
+      {kind === "casino" && <Casino accent={accent} lit={featured} />}
+      {kind === "depot" && <Depot accent={accent} lit={featured} />}
+      {kind === "shop" && <Shop accent={accent} lit={featured} />}
+      {kind === "factory" && <Factory accent={accent} project={project} lit={featured} />}
 
       {/* the product itself, up on the building's own screen */}
       <group position={screenAt}>
@@ -390,7 +419,7 @@ export default function Venue({ project, kind, position, facing, featured, onSel
         <LogoSign src={project.logo} accent={accent} size={sign.size} featured={featured} />
       </group>
 
-      <pointLight position={[0, 6, 7]} color={accent} intensity={featured ? 60 : 26} distance={46} />
+      {featured && <Lamp position={[0, 6, 7]} color={accent} intensity={60} distance={46} />}
     </group>
   );
 }
@@ -400,7 +429,7 @@ export default function Venue({ project, kind, position, facing, featured, onSel
    Low and wide, a stepped parapet, and a canopy over the
    door with bulbs running round it.
    ========================================================= */
-function Casino({ accent }) {
+function Casino({ accent, lit }) {
   const plugs = useTexture("/badges/for-wordpress.webp");
 
   return (
@@ -476,7 +505,7 @@ function Casino({ accent }) {
       ))}
 
       {/* the board throws its own light down over the roof */}
-      <pointLight position={[0, 13.5, 5]} color={accent} intensity={26} distance={24} />
+      {lit && <Lamp position={[0, 13.5, 5]} color={accent} intensity={26} distance={24} />}
     </group>
   );
 }
@@ -486,7 +515,7 @@ function Casino({ accent }) {
    A canopy you could get an artic under, two pumps, a trailer
    parked up and a totem out by the road.
    ========================================================= */
-function Depot({ accent }) {
+function Depot({ accent, lit }) {
   return (
     <group>
       {/* the shop behind */}
@@ -586,7 +615,7 @@ function Depot({ accent }) {
           radius={0.08}
           speed={1.3}
         />
-        <pointLight position={[0, 8.6, 5]} color={accent} intensity={24} distance={24} />
+        {lit && <Lamp position={[0, 8.6, 5]} color={accent} intensity={24} distance={24} />}
       </group>
 
       {/* The totem out by the road, as a lightbox: a lit panel behind the
@@ -628,7 +657,7 @@ function Depot({ accent }) {
         radius={0.08}
         speed={1.2}
       />
-      <pointLight position={[5.9, 7.6, 8]} color={accent} intensity={22} distance={18} />
+      {/* the lightbox is self-lit; the board's lamp covers the forecourt */}
 
       {/* a lit edge along the forecourt, like a kerb */}
       <Bulbs
@@ -648,7 +677,7 @@ function Depot({ accent }) {
    A small unit with a gable, a striped awning and a window
    you can see the stock through.
    ========================================================= */
-function Shop({ accent }) {
+function Shop({ accent, lit }) {
   const [store, win1, win2, play] = useTexture([
     "/shots/pokellectr-store.webp",
     "/shots/pokellectr-win1.webp",
@@ -731,7 +760,7 @@ function Shop({ accent }) {
             <meshStandardMaterial color="#1a2523" metalness={0.8} roughness={0.32} />
           </mesh>
         ))}
-        <pointLight position={[0, 6.9, 4]} color={accent} intensity={20} distance={20} />
+        {/* the screen is self-lit; the roof board's lamp covers the unit */}
       </group>
 
       {/* where to get it. The badge is used exactly as Google supplies it,
@@ -781,7 +810,7 @@ function Shop({ accent }) {
       ))}
       <Bulbs count={8} from={[-6.3, 8.7, 1.9]} to={[-6.3, 14.5, 1.9]} colour={accent} speed={1.1} />
       <Bulbs count={8} from={[6.3, 8.7, 1.9]} to={[6.3, 14.5, 1.9]} colour={accent} speed={1.1} />
-      <pointLight position={[0, 10.6, 5]} color={accent} intensity={22} distance={22} />
+      {lit && <Lamp position={[0, 10.6, 5]} color={accent} intensity={26} distance={24} />}
     </group>
   );
 }
@@ -869,7 +898,7 @@ function Reel({ accent, position, speed = 1 }) {
    go past: big screen one side, row of phone-shaped screens
    the other, something visibly moving between the two.
    ========================================================= */
-function Factory({ accent, project }) {
+function Factory({ accent, project, lit }) {
   const outs = useTexture([
     "/shots/clippd-out1.webp",
     "/shots/clippd-out2.webp",
@@ -958,7 +987,7 @@ function Factory({ accent, project }) {
         <meshBasicMaterial color={accent} transparent opacity={0.14} toneMapped={false} />
       </mesh>
 
-      <pointLight position={[0, 7, 8]} color={accent} intensity={26} distance={28} />
+      {lit && <Lamp position={[0, 7, 8]} color={accent} intensity={26} distance={28} />}
       <group visible={false}>{project.id}</group>
     </group>
   );

@@ -1,4 +1,4 @@
-import { Component, Suspense, lazy, useCallback, useEffect, useRef, useState } from "react";
+import { Component, Suspense, lazy, useCallback, useEffect, useState } from "react";
 
 import Counter from "./components/Counter";
 import ProjectView from "./components/ProjectView";
@@ -8,11 +8,28 @@ import "./styles.css";
 
 const Stage = lazy(() => import("./three/Stage"));
 
+/* Some machines cannot draw the city at all. School and work laptops are
+   the usual ones: graphics acceleration switched off by policy, so there is
+   no WebGL to be had. Those get the page without the world behind it,
+   straight away, rather than a loading screen waiting on a scene that is
+   never going to arrive. */
+function canDraw() {
+  if (typeof document === "undefined") return true;
+  try {
+    return Boolean(document.createElement("canvas").getContext("webgl2"));
+  } catch {
+    return false;
+  }
+}
+
 /* If WebGL is unavailable the page still stands on its own */
 class StageBoundary extends Component {
   state = { failed: false };
   static getDerivedStateFromError() {
     return { failed: true };
+  }
+  componentDidCatch() {
+    this.props.onFail?.();
   }
   render() {
     return this.state.failed ? null : this.props.children;
@@ -150,8 +167,9 @@ function Loading({ done }) {
 
   useEffect(() => {
     if (!done) {
-      /* the long stop: whatever happened, do not sit on the page */
-      const bail = setTimeout(() => setGone(true), 14000);
+      /* the long stop: whatever happened, do not sit on the page. The
+         stylesheet has its own copy of this for when no script runs. */
+      const bail = setTimeout(() => setGone(true), 8000);
       return () => clearTimeout(bail);
     }
     const t = setTimeout(() => setGone(true), 620);   // let it fade first
@@ -177,8 +195,9 @@ export default function App() {
   const [hoverId, setHoverId] = useState(null);
   const [view, setView] = useState({ kind: "space" });
 
-  /* whether the city has anything on screen yet */
-  const [built, setBuilt] = useState(false);
+  /* whether the city has anything on screen yet — or never will */
+  const [drawable] = useState(canDraw);
+  const [built, setBuilt] = useState(!drawable);
 
   /* The storey the camera is level with. The tour reports it as it rides up
      and down the building; pointing at one overrides it. */
@@ -198,11 +217,6 @@ export default function App() {
     setPick(i);
   }, []);
 
-  /* How far through a write-up the reader is. Kept in a ref so scrolling
-     never re-renders the scene — the camera reads it inside its own frame
-     loop instead. */
-  const progress = useRef(0);
-
   const mode = view.kind === "project" ? "project" : "space";
 
   /* what the way out is called, which is also what tells the header to show
@@ -216,7 +230,6 @@ export default function App() {
   const openProject = useCallback((id) => {
     setActiveId(id);
     setView({ kind: "project", id });
-    progress.current = 0;
     window.scrollTo(0, 0);
     window.history.pushState({ view: "project", id }, "");
   }, []);
@@ -235,7 +248,6 @@ export default function App() {
       return;
     }
     setView({ kind: "space" });
-    progress.current = 0;
     window.scrollTo(0, 0);
   }, []);
 
@@ -250,7 +262,6 @@ export default function App() {
       } else {
         setView({ kind: "space" });
       }
-      progress.current = 0;
       window.scrollTo(0, 0);
     };
     window.addEventListener("popstate", onPop);
@@ -263,21 +274,6 @@ export default function App() {
     return () => document.body.classList.remove("is-locked");
   }, [view.kind]);
 
-  /* reading position drives the camera while a project is open */
-  useEffect(() => {
-    if (view.kind !== "project") {
-      progress.current = 0;
-      return;
-    }
-    const onScroll = () => {
-      const max = document.documentElement.scrollHeight - window.innerHeight;
-      progress.current = max > 40 ? Math.min(1, window.scrollY / max) : 0;
-    };
-    onScroll();
-    window.addEventListener("scroll", onScroll, { passive: true });
-    return () => window.removeEventListener("scroll", onScroll);
-  }, [view]);
-
   /* escape always takes you back out to the map */
   useEffect(() => {
     const onKey = (e) => {
@@ -288,22 +284,21 @@ export default function App() {
   }, [view.kind, toSpace]);
 
   return (
-    <div className={`site view-${view.kind}`}>
+    <div className={`site view-${view.kind} ${drawable ? "" : "no-world"}`}>
       <Boot />
       <Loading done={built} />
 
       {/* the world, behind everything */}
       <div className={`stage-layer ${hoverId ? "is-pointing" : ""}`}>
-        <StageBoundary>
+        <StageBoundary onFail={() => setBuilt(true)}>
           <Suspense fallback={null}>
-            <Stage
+            {drawable && <Stage
               projects={projects}
               activeId={activeId}
               hoverId={hoverId}
               featuredId={showId}
               pickIndex={pick}
               mode={mode}
-              progressRef={progress}
               onSelect={openProject}
               onHover={setHoverId}
               onFeature={(i) => {
@@ -312,7 +307,7 @@ export default function App() {
               }}
               onBuilt={() => setBuilt(true)}
               onOffice={() => openPage("contact")}
-            />
+            />}
           </Suspense>
         </StageBoundary>
         <div className="stage-vignette" aria-hidden="true" />

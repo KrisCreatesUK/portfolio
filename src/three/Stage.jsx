@@ -1,5 +1,6 @@
 import { Suspense, useEffect, useRef, useState } from "react";
 import { Canvas, useFrame } from "@react-three/fiber";
+import { PerformanceMonitor } from "@react-three/drei";
 
 import World from "./World";
 import Cyberspace from "./Cyberspace";
@@ -53,7 +54,6 @@ export default function Stage({
   featuredId,
   pickIndex,
   mode,
-  progressRef,
   onSelect,
   onHover,
   onFeature,
@@ -61,6 +61,15 @@ export default function Stage({
   onOffice,
 }) {
   const lite = useLite();
+
+  /* How sharp to draw. A desktop at 1.75 was drawing three times the pixels
+     of the screen it sat on, and a laptop's own graphics could not keep up:
+     on an integrated chip it fell to twenty frames a second. 1.25 is still
+     crisp, and if the frame rate sags anyway it drops to the screen's own
+     resolution and stays there. */
+  const [struggling, setStruggling] = useState(false);
+  const sharp = struggling ? 1 : lite ? 1.35 : 1.25;
+
   const focusIndex = projects.findIndex((p) => p.id === activeId);
   const reduced =
     typeof window !== "undefined" &&
@@ -69,11 +78,12 @@ export default function Stage({
   return (
     <Canvas
       className="stage-canvas"
-      dpr={[1, lite ? 1.35 : 1.75]}
+      dpr={[1, sharp]}
       gl={{ antialias: !lite, powerPreference: "high-performance" }}
       camera={{ position: [0, 60, 30], fov: 55, near: 0.1, far: 700 }}
       onPointerMissed={() => onHover(null)}
     >
+      <PerformanceMonitor onDecline={() => setStruggling(true)} />
       <color attach="background" args={["#030404"]} />
       {/* The map is a hundred units across, so the haze has to start past the
           far monuments or the place reads as one lit object in a black room. */}
@@ -108,7 +118,6 @@ export default function Stage({
         mode={mode}
         focusIndex={focusIndex}
         total={projects.length}
-        progressRef={progressRef}
         pointing={Boolean(hoverId)}
         pickIndex={pickIndex}
         onFeature={onFeature}

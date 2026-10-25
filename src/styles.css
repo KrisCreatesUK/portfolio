@@ -1437,9 +1437,21 @@ main { position: relative; z-index: 10; }
   place-items: center;
   background: radial-gradient(circle at 50% 42%, #0a1210, #030504 68%);
   transition: opacity 0.55s ease, visibility 0.55s;
+  /* This is in the prerendered page, so it is on screen before any script
+     has run — and if the script never runs (blocked by a school filter, too
+     old a browser, switched off) nothing would ever take it away. It used to
+     sit there for good, which looked exactly like a site that would not
+     load. So it leaves on its own as well. */
+  animation: loading-bail 0.55s ease 9s forwards;
 }
 
 .loading.is-done { opacity: 0; visibility: hidden; }
+
+@keyframes loading-bail { to { opacity: 0; visibility: hidden; } }
+
+/* no WebGL, so no street: nothing for the flight controls to fly */
+.no-world .pad,
+.no-world .space-hint { display: none; }
 
 .loading-inner {
   display: grid;

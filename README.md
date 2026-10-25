@@ -68,6 +68,19 @@ the road went — including through the corners, which the craft rounds before y
   loses the depth test at street distance and renders dead black.
 - **One video plays at a time** — the frontage you are coming up on — and nothing is fetched
   until you first draw level with one.
+- **Lights are the expensive thing, not meshes.** Every light is evaluated on every lit pixel
+  on screen, wherever it stands. Nineteen of them took an integrated-graphics laptop to about
+  20 fps; the budget is now 5 point + 2 spot. A venue's own lights (`Lamp` in `Venue.jsx`)
+  exist only while it is the featured one, and every venue carries exactly two so the count
+  never changes — a change in the count recompiles every material at once. Add a light only
+  by taking one away. Render resolution is capped at 1.25 and drops to 1 if fps sags.
+- **Scrolling never moves the camera.** Not the wheel, not a vertical swipe, not reading down
+  a write-up. Visitors scroll by reflex and the street lurching under them was the most
+  confusing thing on the site; the GO and back buttons are how you travel.
+- **The loading screen must always be able to leave.** It is in the prerendered markup, so it
+  has a CSS timeout and a `<noscript>` rule as well as the script. With no WebGL (school
+  laptops with acceleration disabled by policy) the stage is never mounted and the page shows
+  at once. The build targets Chrome 87 for school Chromebooks stuck on old versions.
 
 ## Prerendering
 

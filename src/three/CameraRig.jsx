@@ -35,9 +35,14 @@ import {
 
      forward / back   fly up the street, or back down it
      left / right     look across at what you are passing
-     drag             the same two, together
-     wheel            forward and back
+     drag sideways    the same as left / right
      a tap, a window  fly up the road to that one
+
+   Nothing that feels like scrolling moves you: not the wheel,
+   not a swipe up the screen, not reading down a write-up.
+   People scroll out of habit, and the street lurching under
+   them when they did was the most confusing thing on the
+   site. The GO and back buttons are how you travel.
 
    Opening a project is the same number moving: it drives up
    to that frontage and parks.
@@ -51,9 +56,7 @@ const CRUISE = 14;            // drifting along when left alone
    you is wound back on a small screen. */
 const PHONE_PACE = 0.55;
 const PUSH = 52;              // units a second with forward held
-const DRAG_FWD = 210;         // how far a full-screen drag carries you
 const DRAG_LOOK = 2.2;
-const FLING_DECAY = 0.08;
 
 const EYE = 9.5;              // how high off the road
 const EYE_MIN = 4;
@@ -163,7 +166,6 @@ export default function CameraRig({
   mode,
   focusIndex,
   total,
-  progressRef,
   pointing,
   pickIndex,
   onFeature,
@@ -187,9 +189,6 @@ export default function CameraRig({
     dragging: false,
     lastX: 0,
     lastY: 0,
-    lastT: 0,
-    vFwd: 0,
-    vLook: 0,
     pointerId: null,
     glance: 0,                  // how far the head is turned to a frontage
     featured: -1,
@@ -207,11 +206,8 @@ export default function CameraRig({
       s.intro = null;
       s.flyTo = null;
       gesture.moved = 0;
-      s.vFwd = 0;
-      s.vLook = 0;
       s.lastX = e.clientX;
       s.lastY = e.clientY;
-      s.lastT = e.timeStamp || performance.now();
       el.setPointerCapture?.(e.pointerId);
       s.pointerId = e.pointerId;
       el.classList.add("is-dragging");
@@ -226,19 +222,11 @@ export default function CameraRig({
       s.lastY = e.clientY;
       gesture.moved += Math.hypot(dx, dy);
 
-      /* sideways turns your head, up and down drives. Drag carries the
-         scene with the finger rather than steering against it. */
+      /* Sideways turns your head, and that is all a drag does. Up and down
+         used to drive you along the street, which on a phone meant every
+         attempt to scroll the page sent you flying past the work. */
       const dLook = (dx / window.innerWidth) * DRAG_LOOK;
-      const dFwd = (dy / window.innerHeight) * DRAG_FWD;
-
       s.tLook = clamp(s.tLook + dLook, -LOOK_MAX, LOOK_MAX);
-      s.s += dFwd;
-
-      const now = e.timeStamp || performance.now();
-      const ms = Math.max(8, now - s.lastT);
-      s.lastT = now;
-      s.vFwd = (dFwd / ms) * 1000;
-      s.vLook = (dLook / ms) * 1000;
     };
 
     const up = () => {
@@ -248,28 +236,18 @@ export default function CameraRig({
       el.classList.remove("is-dragging");
     };
 
-    const wheel = (e) => {
-      if (mode !== "space") return;
-      e.preventDefault();
-      s.idle = 0;
-      s.flyTo = null;
-      s.s += e.deltaY * 0.13;
-    };
-
     el.addEventListener("pointerdown", down);
     window.addEventListener("pointermove", move);
     window.addEventListener("pointerup", up);
     window.addEventListener("pointercancel", up);
-    el.addEventListener("wheel", wheel, { passive: false });
 
     return () => {
       el.removeEventListener("pointerdown", down);
       window.removeEventListener("pointermove", move);
       window.removeEventListener("pointerup", up);
       window.removeEventListener("pointercancel", up);
-      el.removeEventListener("wheel", wheel);
     };
-  }, [gl, mode]);
+  }, [gl]);
 
   /* ---- the lens -------------------------------------------------------
      Wider on a tall thin screen, where a normal one shows so narrow a slice
@@ -394,12 +372,12 @@ export default function CameraRig({
 
     /* ---- how far along the road ---------------------------------------- */
     if (mode === "project" && focusIndex >= 0) {
-      /* The write-up drives: how far you have read slides the camera past
-         the frontage and lifts it, so the building moves while you read. */
-      const p = clamp(progressRef?.current ?? 0, 0, 1);
-      const park = venueS(focusIndex) - PARK_BACK + p * 26;
+      /* Parked outside it, and it stays parked while you read. The camera
+         used to slide along and climb as the write-up scrolled, which made
+         reading feel like being driven somewhere. */
+      const park = venueS(focusIndex) - PARK_BACK;
       st.s += shortest(st.s, park) * Math.min(1, dt * 2.3);
-      st.tEye = 8 + p * 11;
+      st.tEye = 8;
       st.tLook = 0;
       st.speed = 0;
     } else {
@@ -422,13 +400,6 @@ export default function CameraRig({
           st.speed = input.climb * PUSH * pace;
         } else {
           st.speed = damp(st.speed, 0, 5, dt);
-        }
-
-        /* the throw: let go mid-drag and it keeps rolling */
-        if (!st.dragging && Math.abs(st.vFwd) > 0.4) {
-          st.s += st.vFwd * dt;
-          st.vFwd *= Math.pow(FLING_DECAY, dt);
-          st.idle = 0;
         }
 
         /* slow into the bends, the way anything with mass would */
