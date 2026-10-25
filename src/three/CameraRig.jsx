@@ -48,14 +48,20 @@ import {
    to that frontage and parks.
    ========================================================= */
 
-const CRUISE = 14;            // drifting along when left alone
+/* The tour never stops on its own. It used to stand down whenever the
+   pointer moved or rested on a building — and on a laptop the pointer sits
+   in the middle of the street, so the whole city looked frozen. Now it is
+   always going, and the buttons change how: GO adds to the cruise, back
+   puts it in reverse, and letting go eases it back to the cruise. */
+const CRUISE = 20;            // the tour's own pace
 
 /* A phone shows a narrow slice of the street, so the same speed across the
    ground goes past far faster than it does on a desktop — and a thumb on a
    throttle is a blunter instrument than a held key. Everything that moves
    you is wound back on a small screen. */
 const PHONE_PACE = 0.55;
-const PUSH = 52;              // units a second with forward held
+const PUSH = 52;              // what GO adds, and how fast back goes
+const HOLD = 2.5;             // a pause outside a place you picked yourself
 const DRAG_LOOK = 2.2;
 
 const EYE = 9.5;              // how high off the road
@@ -166,9 +172,9 @@ export default function CameraRig({
   mode,
   focusIndex,
   total,
-  pointing,
   pickIndex,
   onFeature,
+  onStop,
   reduced = false,
 }) {
   const { camera, gl } = useThree();
@@ -192,6 +198,8 @@ export default function CameraRig({
     pointerId: null,
     glance: 0,                  // how far the head is turned to a frontage
     featured: -1,
+    hold: 0,                    // seconds left sitting outside a pick
+    stop: null,                 // what the guide is talking about
   });
 
   /* ---- fly it yourself ------------------------------------------------ */
@@ -364,6 +372,9 @@ export default function CameraRig({
         st.intro = null;
         flight.intro = null;
       }
+      /* the arrival winds round head office, so that is where the guide
+         starts: the introduction */
+      reportStop(st, "hq", onStop);
       publish(st);
       return;
     }
@@ -391,23 +402,29 @@ export default function CameraRig({
         st.idle = 0;
         if (Math.abs(gap) < 0.6) {
           st.flyTo = null;
-          st.idle = -4;          // sit outside it a moment before moving on
+          st.hold = HOLD;        // sit outside it a moment before moving on
         }
       } else {
-        /* forward and back, held */
+        /* The cruise, unless a button says otherwise. Someone who has asked
+           for reduced motion gets no cruise, but the buttons still work. */
+        let want = reduced ? 0 : CRUISE;
+        if (st.hold > 0) {
+          st.hold -= dt;
+          want = 0;
+        }
+        if (input.climb > 0) want = CRUISE + PUSH;
+        else if (input.climb < 0) want = -PUSH;
         if (input.climb) {
           st.idle = 0;
-          st.speed = input.climb * PUSH * pace;
-        } else {
-          st.speed = damp(st.speed, 0, 5, dt);
+          st.hold = 0;
         }
+        /* eased rather than switched, so a press is a surge and a release
+           settles back into the tour instead of lurching */
+        st.speed = damp(st.speed, want * pace, input.climb ? 3 : 1.6, dt);
 
         /* slow into the bends, the way anything with mass would */
         const bend = 1 - cornerAt(st.s) * 0.45;
         st.s += st.speed * bend * dt;
-
-        const touring = !st.dragging && !pointing && !reduced && st.idle > RESUME_AFTER;
-        if (touring) st.s += CRUISE * bend * pace * dt;
       }
 
       /* looking across the street, held */
@@ -422,11 +439,13 @@ export default function CameraRig({
     /* ---- which one are we passing? ------------------------------------- */
     /* The one you are coming up on, not simply the nearest: something you
        have already gone past counts double, so the bar stays on what is in
-       front of you rather than flicking back as you clear a frontage. */
+       front of you rather than flicking back as you clear a frontage. In
+       reverse, "in front" is the other way. */
+    const ahead = st.speed < -0.5 ? -1 : 1;
     let nearest = 0;
     let best = Infinity;
     for (let i = 0; i < total; i++) {
-      const d = shortest(st.s, venueS(i));
+      const d = shortest(st.s, venueS(i)) * ahead;
       const score = d >= 0 ? d : -d * 2.2;
       if (score < best) {
         best = score;
@@ -463,7 +482,7 @@ export default function CameraRig({
       /* A project wins unless head office is a good deal nearer: the point
          of the street is the work, and the tower pulling the camera off a
          frontage that was about to come up is exactly what it must not do. */
-      const score = (d) => (d >= 0 ? d : -d * 2.2);
+      const score = (d) => (d * ahead >= 0 ? d * ahead : -d * ahead * 2.2);
       if (score(shortest(st.s, HQ_S)) * HQ_PULL < score(shortest(st.s, look))) {
         look = HQ_S;
         lookAt = -1;
@@ -472,13 +491,20 @@ export default function CameraRig({
 
     /* Builds as you come up on it and falls away once it is behind you,
        rather than being symmetrical: nobody cranes back over their shoulder
-       at a shop they have already gone past. */
-    const gap = shortest(st.s, look);
+       at a shop they have already gone past. Which way is "coming up"
+       depends on which way you are going. */
+    const gap = shortest(st.s, look) * ahead;
     const g =
       gap >= 0
         ? clamp((GLANCE - gap) / (GLANCE - LEVEL), 0, 1)
         : clamp(1 + gap / BEHIND, 0, 1);
     const glance = g * g * (3 - 2 * g);
+
+    /* What the tour guide is talking about: head office while the camera is
+       turned to it, otherwise the place you are coming up on. */
+    if (mode !== "project") {
+      reportStop(st, lookAt < 0 && glance > 0.15 ? "hq" : st.featured, onStop);
+    }
 
     /* and where that frontage actually stands */
     if (lookAt < 0) {
@@ -605,6 +631,13 @@ function arrivalAt(p, s0, out) {
     u * u * SPIRAL_BOTTOM + 2 * u * e * (SPIRAL_BOTTOM + 2) + e * e * CRAFT_HOVER,
     u * u * pz + 2 * u * e * cz + e * e * _end.z
   );
+}
+
+/* only on a change, so the guide re-renders once per stop, not per frame */
+function reportStop(st, stop, onStop) {
+  if (stop === st.stop) return;
+  st.stop = stop;
+  onStop?.(stop);
 }
 
 /* what the craft needs to fly the same road */

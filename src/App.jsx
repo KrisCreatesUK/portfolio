@@ -49,9 +49,11 @@ function FlightPad() {
   const set = (axis, value) => () => {
     input[axis] = value;
   };
-  const clear = () => {
-    input.turn = 0;
-    input.climb = 0;
+  /* Each button lets go of its own press and nobody else's. Pressing back
+     straight after GO moves the focus off GO, and GO's blur used to clear
+     the throttle back had only just set — so back did nothing at all. */
+  const release = (value) => () => {
+    if (input.climb === value) input.climb = 0;
   };
 
   useEffect(() => {
@@ -94,10 +96,10 @@ function FlightPad() {
       aria-label={label}
       onContextMenu={(e) => e.preventDefault()}
       onPointerDown={set("climb", value)}
-      onPointerUp={clear}
-      onPointerLeave={clear}
-      onPointerCancel={clear}
-      onBlur={clear}
+      onPointerUp={release(value)}
+      onPointerLeave={release(value)}
+      onPointerCancel={release(value)}
+      onBlur={release(value)}
     >
       {children}
     </button>
@@ -208,6 +210,12 @@ export default function App() {
      things. Null again once the tour takes back over. */
   const [pick, setPick] = useState(null);
 
+  /* What the tour guide is talking about: "hq" for the introduction, or the
+     index of the place you are coming up on. Head office to begin with,
+     which is also all a machine without WebGL ever sees. */
+  const [stop, setStop] = useState("hq");
+  const guide = typeof stop === "number" ? projects[stop] : null;
+
   const showing = projects[featured] ?? projects[0];
   const showId = hoverId ?? showing.id;
 
@@ -295,7 +303,6 @@ export default function App() {
             {drawable && <Stage
               projects={projects}
               activeId={activeId}
-              hoverId={hoverId}
               featuredId={showId}
               pickIndex={pick}
               mode={mode}
@@ -305,6 +312,7 @@ export default function App() {
                 setFeatured(i);
                 setPick((cur) => (cur === i ? cur : null));
               }}
+              onStop={setStop}
               onBuilt={() => setBuilt(true)}
               onOffice={() => openPage("contact")}
             />}
@@ -318,32 +326,61 @@ export default function App() {
       <main>
         {/* ================= THE MAP ================= */}
         <section className="space" id="top">
+          {/* THE TOUR GUIDE. At head office — which is where the arrival
+              winds round, and where it comes back to — it introduces the
+              place. Coming up on anything else, it says what that is. The
+              introduction is never taken out of the document, only hidden,
+              so the prerendered page and every crawler still get the h1. */}
           <div className="space-copy">
-            <p className="eyebrow">
-              <span className="pulse" /> {profile.handle} — {profile.location}
-            </p>
+            <div className="guide-stop" hidden={Boolean(guide)}>
+              <p className="eyebrow">
+                <span className="pulse" /> Welcome to Project City — {profile.handle}
+              </p>
 
-            <h1>
-              Full-stack
-              <br />
-              <span className="accent">developer</span>
-            </h1>
+              <h1>
+                Full-stack
+                <br />
+                <span className="accent">developer</span>
+              </h1>
 
-            <p className="lede">{profile.tagline}</p>
+              <p className="lede">{profile.tagline}</p>
+              <p className="lede guide-how">{profile.welcome}</p>
 
-            <div className="hero-actions">
-              <button className="btn btn-primary" onClick={() => openProject(projects[0].id)}>
-                Open the first one
-              </button>
-              <a
-                className="btn"
-                href="https://compkit.kriscreates.co.uk"
-                target="_blank"
-                rel="noopener"
-              >
-                CompKit Game Engine <span aria-hidden="true">↗</span>
-              </a>
+              <div className="hero-actions">
+                <button className="btn btn-primary" onClick={() => openProject(projects[0].id)}>
+                  Open the first one
+                </button>
+                <a
+                  className="btn"
+                  href="https://compkit.kriscreates.co.uk"
+                  target="_blank"
+                  rel="noopener"
+                >
+                  CompKit Game Engine <span aria-hidden="true">↗</span>
+                </a>
+              </div>
             </div>
+
+            {guide && (
+              <div
+                className="guide-stop guide-in"
+                key={guide.id}
+                style={{ "--accent": guide.accent }}
+              >
+                <p className="eyebrow">
+                  <span className="pulse guide-pulse" /> Stop {projects.indexOf(guide) + 1} of{" "}
+                  {projects.length} — {guide.place}
+                </p>
+                <h2 className="guide-name">{guide.name}</h2>
+                <p className="guide-kind">{guide.kind}</p>
+                <p className="lede">{guide.guide}</p>
+                <div className="hero-actions">
+                  <button className="btn btn-primary" onClick={() => openProject(guide.id)}>
+                    Go inside <span aria-hidden="true">→</span>
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Pinned to the edges, not stacked in a column: the middle of the
@@ -425,7 +462,7 @@ export default function App() {
           </div>
 
           <p className="space-hint">
-            <span className="dot" /> Fly up the street — or tap a place to go in
+            <span className="dot" /> Hold GO to speed up — back to reverse
           </p>
         </section>
 

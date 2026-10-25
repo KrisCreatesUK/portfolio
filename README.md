@@ -77,6 +77,15 @@ the road went — including through the corners, which the craft rounds before y
 - **Scrolling never moves the camera.** Not the wheel, not a vertical swipe, not reading down
   a write-up. Visitors scroll by reflex and the street lurching under them was the most
   confusing thing on the site; the GO and back buttons are how you travel.
+- **The tour never stops on its own.** It used to stand down whenever the pointer moved or
+  rested on a building, and on a laptop the pointer sits in the middle of the street, so the
+  city looked frozen. It cruises always; GO adds speed, back reverses, release eases back to
+  the cruise. Only picking a place (a short hold outside it) or opening one stops it.
+  "Coming up" follows the direction of travel, so the guide reads correctly in reverse.
+- **The hero copy is a tour guide.** The rig reports a stop (`onStop`: `"hq"` through the
+  arrival and while passing head office, otherwise the index of the place coming up) and
+  `App` shows that project's `place` and `guide` lines from `data.js`. The welcome block with
+  the h1 is only ever `hidden`, never removed, so the prerendered page keeps it.
 - **The loading screen must always be able to leave.** It is in the prerendered markup, so it
   has a CSS timeout and a `<noscript>` rule as well as the script. With no WebGL (school
   laptops with acceleration disabled by policy) the stage is never mounted and the page shows

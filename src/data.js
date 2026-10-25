@@ -14,6 +14,9 @@ export const profile = {
     "I build and ship complete products — the data pipeline, the API, the interface, the licensing, the deploy.",
   intro:
     "Four systems, four different runtimes. A commercial WordPress plugin suite with its own licence server, two native Android apps built on real data — one for lorry drivers, one for card collectors — and a Python video pipeline that turns long podcasts into published shorts. Same person on the schema, the game canvas, the OCR parser and the CSS.",
+  /* what the tour guide says at head office, under the tagline */
+  welcome:
+    "Sit back — the tour takes you past each one. Hold GO to speed up, back to reverse, or tap a building to go in.",
 };
 
 /* ---------------------------------------------------------
@@ -45,6 +48,10 @@ export const projects = [
     clipSm: "/clips/compkit-sm.mp4",
     poster: "/clips/compkit.webp",
     venue: "casino",
+    /* the tour guide, as you come up on it */
+    place: "The casino",
+    guide:
+      "On a competition site the instant-win result used to be a line of text. CompKit turns it into a game the customer plays — nine of them, from scratch cards to a claw machine.",
     index: "01",
     code: "NO_01",
     name: "CompKit Game Engine",
@@ -95,6 +102,9 @@ export const projects = [
     clipSm: "/clips/truck-it-sm.mp4",
     poster: "/clips/truck-it.webp",
     venue: "depot",
+    place: "The services",
+    guide:
+      "A map for lorry drivers that answers what no sat-nav does at 8pm: where can I stop for the night without paying? 4,581 free stops, built from OpenStreetMap.",
     index: "02",
     code: "NO_02",
     name: "Truck It Lets Park",
@@ -140,6 +150,9 @@ export const projects = [
     clipSm: "/clips/pokellectr-sm.mp4",
     poster: "/clips/pokellectr.webp",
     venue: "shop",
+    place: "The card shop",
+    guide:
+      "Point a phone at a trading card and it knows which one it is in about a second — then it writes the eBay listing and puts it up for you.",
     index: "03",
     code: "NO_03",
     name: "Pokéllectr",
@@ -186,6 +199,9 @@ export const projects = [
     clipSm: "/clips/clippd-sm.mp4",
     poster: "/clips/clippd.webp",
     venue: "factory",
+    place: "The works",
+    guide:
+      "A long YouTube video goes in one end. Captioned vertical clips come out the other, and it posts them to every YouTube and TikTok account you own.",
     index: "04",
     code: "NO_04",
     name: "ClippD",

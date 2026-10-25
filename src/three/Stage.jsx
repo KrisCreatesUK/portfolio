@@ -50,13 +50,13 @@ function useLite() {
 export default function Stage({
   projects,
   activeId,
-  hoverId,
   featuredId,
   pickIndex,
   mode,
   onSelect,
   onHover,
   onFeature,
+  onStop,
   onBuilt,
   onOffice,
 }) {
@@ -118,9 +118,9 @@ export default function Stage({
         mode={mode}
         focusIndex={focusIndex}
         total={projects.length}
-        pointing={Boolean(hoverId)}
         pickIndex={pickIndex}
         onFeature={onFeature}
+        onStop={onStop}
         reduced={reduced}
       />
     </Canvas>
